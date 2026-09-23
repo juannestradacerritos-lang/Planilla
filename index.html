@@ -42,11 +42,9 @@
             overflow-x: hidden;
         }
 
-        /* Vistas ocultas por defecto */
-        #login-view, #dashboard-view { display: none; }
-        
+        /* Ambas vistas ocultas por defecto para evitar parpadeos */
         #login-view {
-            flex-direction: column; align-items: center; justify-content: center;
+            display: none; flex-direction: column; align-items: center; justify-content: center;
             width: 100%; max-width: 400px; text-align: center; gap: 20px;
             margin-top: -40px; 
         }
@@ -60,7 +58,7 @@
         .btn-google:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(255, 255, 255, 0.2); }
 
         .dashboard-wrapper {
-            width: 100%; max-width: 550px; flex-direction: column; gap: 25px;
+            width: 100%; max-width: 550px; display: none; flex-direction: column; gap: 25px;
         }
 
         .header { display: flex; align-items: center; gap: 15px; margin-bottom: 5px; justify-content: space-between; }
@@ -157,13 +155,6 @@
     </style>
 </head>
 <body>
-    <!-- PANTALLA DE CARGA INICIAL -->
-    <div id="loading-view" style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; width: 100%; background: #050505; position: fixed; top: 0; left: 0; z-index: 9999; color: #94a3b8; gap: 15px;">
-        <i class="fa-solid fa-spinner fa-spin" style="font-size: 2.5rem; color: #3b82f6;"></i>
-        <p style="font-family: 'Inter', sans-serif; font-size: 0.95rem;">Autenticando...</p>
-    </div>
-
-    <!-- PANTALLA DE INICIO DE SESIÓN -->
     <div id="login-view">
         <i class="fa-solid fa-graduation-cap" style="font-size: 4rem; color: #3b82f6;"></i>
         <h1>Panel de clases y tareas</h1>
@@ -173,9 +164,7 @@
         </button>
     </div>
     
-    <!-- PANEL PRINCIPAL -->
     <div class="dashboard-wrapper" id="dashboard-view">
-        <!-- Cabecera -->
         <div class="header">
             <div class="profile-section">
                 <div class="avatar" id="profileAvatar"></div>
@@ -187,7 +176,6 @@
             <button class="btn-logout" onclick="logout()"><i class="fa-solid fa-arrow-right-from-bracket"></i> Salir</button>
         </div>
 
-        <!-- Formulario de Clases -->
         <div class="card">
             <div class="card-title" style="color: #38bdf8;"><i class="fa-solid fa-bolt"></i> Nueva Clase</div>
             <div class="form-row">
@@ -234,13 +222,11 @@
             </button>
         </div>
 
-        <!-- Lista de Clases -->
         <div class="card">
             <div class="card-title" style="color: #f8fafc;"><i class="fa-solid fa-list-check" style="color: #38bdf8;"></i> Agenda de la Semana</div>
             <div id="classesList"><p style="text-align:center; color:#94a3b8; font-size: 0.9rem; margin-top: 10px;">Sincronizando con la nube...</p></div>
         </div>
 
-        <!-- Gestor de Tareas -->
         <div class="card">
             <div class="card-title" style="color: #a78bfa;"><i class="fa-solid fa-clipboard-list"></i> Gestor de Tareas</div>
             <div class="form-row">
@@ -272,7 +258,6 @@
         </div>
     </div>
 
-    <!-- SDK DE FIREBASE -->
     <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore-compat.js"></script>
@@ -297,21 +282,13 @@
         let unsubscribeClasses = null;
         let unsubscribeTasks = null;
 
-        // Limpiar pantalla de carga
-        function hideLoading() {
-            const loader = document.getElementById('loading-view');
-            if (loader) loader.style.display = 'none';
-        }
-
+        // Capturar resultado del redirect al volver de Google de forma limpia
         auth.getRedirectResult().catch((error) => {
             console.error("Error en redirect:", error);
-            hideLoading();
         });
 
-        // --- SISTEMA DE AUTENTICACIÓN LÓGICA LIMPIA ---
+        // --- SISTEMA DE AUTENTICACIÓN ---
         auth.onAuthStateChanged((user) => {
-            hideLoading(); // En cuanto Google responda, quitamos el escudo
-
             if (user) {
                 currentUser = user;
                 document.getElementById('login-view').style.display = 'none';
@@ -331,15 +308,6 @@
             }
         });
         
-        // Timeout de seguridad: Si pasan 3 segundos y el internet falla, quita la carga
-        setTimeout(() => {
-            const loader = document.getElementById('loading-view');
-            if (loader && loader.style.display !== 'none') {
-                loader.style.display = 'none';
-                if(!currentUser) document.getElementById('login-view').style.display = 'flex';
-            }
-        }, 3000);
-
         function loginWithGoogle() { 
             auth.signInWithRedirect(provider); 
         }
