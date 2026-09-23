@@ -43,7 +43,7 @@
         }
         /* Pantalla de Login (NUEVO) */
         #login-view {
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            display: none; flex-direction: column; align-items: center; justify-content: center;
             width: 100%; max-width: 400px; text-align: center; gap: 20px;
             margin-top: -40px; 
         }
@@ -285,32 +285,29 @@
         let unsubscribeClasses = null;
         let unsubscribeTasks = null;
 
-        // --- SISTEMA DE AUTENTICACIÓN ---
+       // --- SISTEMA DE AUTENTICACIÓN ---
         auth.onAuthStateChanged((user) => {
             if (user) {
-                // Usuario conectó su cuenta
+                // Usuario conectado: Muestra el panel directamente sin parpadeos
                 currentUser = user;
                 document.getElementById('login-view').style.display = 'none';
                 document.getElementById('dashboard-view').style.display = 'flex';
                 
-                // Cargar su foto y nombre real de Google
                 document.getElementById('userName').textContent = user.displayName;
                 document.getElementById('profileAvatar').innerHTML = `<img src="${user.photoURL}" alt="Perfil">`;
                 
-                // Iniciar la descarga de SU información privada
                 loadUserData();
             } else {
-                // Nadie conectado
+                // Nadie conectado: Muestra la pantalla de login limpiamente
                 currentUser = null;
                 document.getElementById('login-view').style.display = 'flex';
                 document.getElementById('dashboard-view').style.display = 'none';
                 
-                // Detener descargas
                 if(unsubscribeClasses) unsubscribeClasses();
                 if(unsubscribeTasks) unsubscribeTasks();
             }
         });
-
+        
         function loginWithGoogle() { auth.signInWithPopup(provider); }
         function logout() { auth.signOut(); }
 
