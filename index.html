@@ -652,7 +652,7 @@
 
 
         // ==========================================================
-        // 🔥 LÓGICA DE IA (GROQ) CON SISTEMA DE RESPALDO (FALLBACK)
+        // 🔥 LÓGICA DE IA (GROQ) CON MODELOS ACTUALIZADOS Y ACTIVOS
         // ==========================================================
         async function procesarAudioConIA() {
             const materia = document.getElementById('audioSubject').value;
@@ -705,13 +705,11 @@
                     throw new Error("No se logró detectar ninguna voz humana en este archivo.");
                 }
 
-                // PASO 2: Resumir el texto usando una lista de respaldo (Fallback Array de Groq)
-                // Se intentará primero con el más libre, y si falla, saltará a los demás.
+                // PASO 2: Resumir el texto usando una lista de modelos gratuitos 100% activos hoy en día
                 const modelosDeRespaldo = [
                     "llama-3.1-8b-instant",
-                    "llama3-8b-8192",
-                    "llama3-70b-8192",
-                    "mixtral-8x7b-32768"
+                    "gemma2-9b-it",
+                    "llama3-8b-8192"
                 ];
 
                 let exitoChat = false;
@@ -752,7 +750,7 @@ Transcripción de la clase:
                     } catch (error) {
                         console.warn(`Modelo ${modeloActual} no disponible:`, error.message);
                         if (i === modelosDeRespaldo.length - 1) {
-                            throw new Error("Todos los modelos de texto están saturados o restringidos en tu cuenta. " + error.message);
+                            throw new Error("Todos los modelos gratuitos fallaron. El último error fue: " + error.message);
                         }
                     }
                 }
