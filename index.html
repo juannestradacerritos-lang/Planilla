@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Panel U - Pro</title>
+    <title>Panel U - Pro IA</title>
     
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#0f172a">
@@ -45,7 +45,6 @@
             overflow-x: hidden;
         }
 
-        /* VISTAS */
         #login-view {
             display: none; flex-direction: column; align-items: center; justify-content: center;
             width: 100%; max-width: 400px; text-align: center; gap: 24px;
@@ -65,7 +64,6 @@
             width: 100%; max-width: 600px; display: none; flex-direction: column; gap: 20px;
         }
 
-        /* HEADER PROFESIONAL */
         .header { 
             display: flex; align-items: center; gap: 15px; margin-bottom: 10px; 
             justify-content: space-between; position: relative;
@@ -86,7 +84,6 @@
         .header-text h1 { font-size: 1.15rem; font-weight: 700; color: #f8fafc; letter-spacing: -0.3px;}
         .header-text p { font-size: 0.8rem; color: #38bdf8; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;}
         
-        /* MENÚ DESPLEGABLE TIPO APP NATIVA */
         .menu-container { position: relative; }
         .btn-menu {
             background: rgba(255, 255, 255, 0.05); border: 1px solid var(--border-light); color: #fff;
@@ -113,7 +110,6 @@
         .dropdown-item.active-item { background: rgba(59, 130, 246, 0.1); color: var(--primary); font-weight: 600;}
         .dropdown-item.danger:hover { background: rgba(239, 68, 68, 0.1); color: var(--danger); }
         
-        /* TARJETAS PREMIUM */
         .card {
             background: var(--card-bg); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
             border: 1px solid var(--border-light); border-radius: 20px; padding: 24px;
@@ -124,7 +120,6 @@
         .card:hover { transform: translateY(-2px); box-shadow: 0 15px 45px rgba(0,0,0,0.4); }
         .card-title { font-size: 1.1rem; font-weight: 700; margin-bottom: 24px; display: flex; align-items: center; gap: 10px; letter-spacing: -0.3px;}
 
-        /* FORMULARIOS ESTILO GRID PROFESIONAL */
         .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
         .form-grid.full { grid-template-columns: 1fr; }
         @media (max-width: 480px) { .form-grid { grid-template-columns: 1fr; } }
@@ -160,8 +155,10 @@
         .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 12px 25px rgba(59, 130, 246, 0.4); }
         .btn-secondary { background: linear-gradient(135deg, var(--secondary), #6d28d9); box-shadow: 0 8px 20px rgba(139, 92, 246, 0.3); }
         .btn-secondary:hover { box-shadow: 0 12px 25px rgba(139, 92, 246, 0.4); }
+        .btn-ai { background: linear-gradient(135deg, var(--ai-color), #3b82f6); box-shadow: 0 8px 20px rgba(6, 182, 212, 0.3); }
+        .btn-ai:hover { box-shadow: 0 12px 25px rgba(6, 182, 212, 0.4); }
+        .btn-ai:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
 
-        /* LISTAS DISEÑO NATIVO */
         .list-item {
             background: rgba(15, 23, 42, 0.6); border: 1px solid var(--border-light); padding: 16px;
             border-radius: 16px; margin-bottom: 12px; display: flex; justify-content: space-between;
@@ -305,19 +302,13 @@
 
             <div class="card">
                 <div class="card-title" style="color: #f8fafc;"><i class="fa-solid fa-layer-group" style="color: #38bdf8;"></i> Mi Agenda Semanal</div>
-                <div id="classesList">
-                    <div class="empty-state">
-                        <i class="fa-solid fa-spinner fa-spin" style="color: var(--primary); opacity:1;"></i>
-                        <p>Sincronizando nube...</p>
-                    </div>
-                </div>
+                <div id="classesList"></div>
             </div>
         </div>
 
         <div id="vista-tareas" style="display: none;">
             <div class="card">
                 <div class="card-title" style="color: #a78bfa;"><i class="fa-solid fa-list-check"></i> Nueva Tarea</div>
-                
                 <div class="form-grid">
                     <div class="form-group">
                         <label>Actividad a realizar</label>
@@ -325,12 +316,9 @@
                     </div>
                     <div class="form-group">
                         <label>Asignatura</label>
-                        <select id="taskSubject" class="form-control">
-                            <option value="" disabled selected>Cargando materias...</option>
-                        </select>
+                        <select id="taskSubject" class="form-control"></select>
                     </div>
                 </div>
-                
                 <div class="form-grid">
                     <div class="form-group">
                         <label>Fecha de entrega</label>
@@ -341,7 +329,6 @@
                         <input type="time" id="taskTime" class="form-control" value="23:59">
                     </div>
                 </div>
-                
                 <button id="btnSaveTask" onclick="processTask()" class="btn-primary btn-secondary">
                     <i class="fa-solid fa-plus"></i> Guardar Actividad
                 </button>
@@ -359,29 +346,31 @@
                 
                 <div class="form-group" style="margin-bottom: 16px;">
                     <label>Selecciona la materia</label>
-                    <select id="audioSubject" class="form-control">
-                        <option value="" disabled selected>Asociar a una materia...</option>
-                    </select>
+                    <select id="audioSubject" class="form-control"></select>
                 </div>
 
                 <div class="form-group" style="margin-bottom: 16px;">
-                    <label>Archivo de audio (MP3, M4A, WAV)</label>
+                    <label>Archivo de audio o video (MP3, MP4, WAV...)</label>
                     <label class="custom-file-upload" style="border-style: solid; justify-content: center;">
                         <i class="fa-solid fa-cloud-arrow-up" style="font-size: 1.2rem;"></i>
-                        <span id="audioFileName">Buscar archivo de audio...</span>
-                        <input type="file" id="classAudioFile" accept="audio/*" onchange="actualizarNombreAudio(this)">
+                        <span id="audioFileName">Buscar archivo de clase...</span>
+                        <input type="file" id="classAudioFile" accept="audio/*,video/*" onchange="actualizarNombreAudio(this)">
                     </label>
                 </div>
+                
+                <div class="form-group" style="margin-bottom: 16px;">
+                    <label>Tu Llave de IA (API Key)</label>
+                    <input type="password" id="inputApiKey" class="form-control" placeholder="Pega aquí tu clave AIzaSy...">
+                </div>
 
-                <button onclick="procesarAudioConIA()" class="btn-primary" style="background: linear-gradient(135deg, var(--ai-color), #3b82f6); box-shadow: 0 8px 20px rgba(6, 182, 212, 0.3);">
-                    <i class="fa-solid fa-wand-magic-sparkles"></i> Transcribir y Extraer Tareas con IA
+                <button id="btnProcesarIA" onclick="procesarAudioConIA()" class="btn-primary btn-ai">
+                    <i class="fa-solid fa-wand-magic-sparkles"></i> Analizar Clase con Gemini
                 </button>
             </div>
 
             <div class="card" id="resultadoTranscripcionCard" style="display: none;">
                 <div class="card-title" style="color: var(--ai-color);"><i class="fa-solid fa-file-lines"></i> Notas Inteligentes</div>
-                <div id="textoResumenIA" style="font-size: 0.95rem; color: var(--text-main); line-height: 1.6; white-space: pre-line;">
-                    </div>
+                <div id="textoResumenIA" style="font-size: 0.95rem; color: var(--text-main); line-height: 1.6; white-space: pre-line;"></div>
             </div>
         </div>
 
@@ -399,8 +388,7 @@
             projectId: "control-de-clases-y-tareas",
             storageBucket: "control-de-clases-y-tareas.firebasestorage.app",
             messagingSenderId: "624724290598",
-            appId: "1:624724290598:web:cb282d508b9250d9c4cae7",
-            measurementId: "G-RXC05BTJ30"
+            appId: "1:624724290598:web:cb282d508b9250d9c4cae7"
         };
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
@@ -413,21 +401,12 @@
         let editingClassId = null;
         let editingTaskId = null;
 
-        // Lógica del Menú Estilo App
-        function toggleMenu() {
-            document.getElementById('dropdownMenu').classList.toggle('active');
-        }
-
-        window.onclick = function(event) {
-            if (!event.target.closest('.menu-container')) {
-                document.getElementById('dropdownMenu').classList.remove('active');
-            }
-        }
+        // Lógica del Menú
+        function toggleMenu() { document.getElementById('dropdownMenu').classList.toggle('active'); }
+        window.onclick = function(event) { if (!event.target.closest('.menu-container')) document.getElementById('dropdownMenu').classList.remove('active'); }
 
         function cambiarVista(vista) {
             document.getElementById('dropdownMenu').classList.remove('active');
-            
-            // Actualizar clases CSS del menú
             document.getElementById('menu-clases').classList.remove('active-item');
             document.getElementById('menu-tareas').classList.remove('active-item');
             document.getElementById('menu-audio').classList.remove('active-item');
@@ -441,41 +420,34 @@
             document.getElementById('vistaActualTexto').textContent = titulos[vista];
         }
 
-        // --- SISTEMA DE AUTENTICACIÓN (REAL RESTAURADO) ---
+        // --- SISTEMA DE AUTENTICACIÓN ---
         auth.onAuthStateChanged((user) => {
             if (user) {
                 currentUser = user;
                 document.getElementById('login-view').style.display = 'none';
                 document.getElementById('dashboard-view').style.display = 'flex';
-                
                 document.getElementById('userName').textContent = user.displayName;
                 document.getElementById('profileAvatar').innerHTML = `<img src="${user.photoURL}" alt="Perfil">`;
-                
                 loadUserData();
             } else {
                 currentUser = null;
                 document.getElementById('dashboard-view').style.display = 'none';
                 document.getElementById('login-view').style.display = 'flex';
-                
                 if(unsubscribeClasses) unsubscribeClasses();
                 if(unsubscribeTasks) unsubscribeTasks();
             }
         });
         
-        function loginWithGoogle() { 
-            auth.signInWithPopup(provider).catch(error => console.error(error));
-        }
+        function loginWithGoogle() { auth.signInWithPopup(provider).catch(error => console.error(error)); }
         function logout() { auth.signOut(); }
 
         // --- UX FORMULARIO ---
         document.getElementById('classImage').addEventListener('change', function(e) {
-            const fileName = e.target.files[0] ? e.target.files[0].name : "Adjuntar imagen...";
-            document.getElementById('fileNameDisplay').textContent = fileName;
+            document.getElementById('fileNameDisplay').textContent = e.target.files[0] ? e.target.files[0].name : "Adjuntar imagen...";
         });
 
         function actualizarNombreAudio(input) {
-            const fileName = input.files[0] ? input.files[0].name : "Buscar archivo de audio...";
-            document.getElementById('audioFileName').textContent = fileName;
+            document.getElementById('audioFileName').textContent = input.files[0] ? input.files[0].name : "Buscar archivo de clase...";
         }
 
         const daysMapStr = { "1": "Lunes", "2": "Martes", "3": "Miércoles", "4": "Jueves", "5": "Viernes", "6": "Sábado", "7": "Domingo" };
@@ -483,76 +455,48 @@
         let tasks = [];
 
         function loadUserData() {
-            unsubscribeClasses = db.collection("clases").where("userId", "==", currentUser.uid)
-                .onSnapshot((snapshot) => {
-                    classes = [];
-                    snapshot.forEach((doc) => { classes.push({ id: doc.id, ...doc.data() }); });
-                    renderClasses();
-                });
-
-            unsubscribeTasks = db.collection("tareas").where("userId", "==", currentUser.uid)
-                .onSnapshot((snapshot) => {
-                    tasks = [];
-                    snapshot.forEach((doc) => { tasks.push({ id: doc.id, ...doc.data() }); });
-                    renderTasks();
-                });
+            unsubscribeClasses = db.collection("clases").where("userId", "==", currentUser.uid).onSnapshot((snapshot) => {
+                classes = []; snapshot.forEach((doc) => { classes.push({ id: doc.id, ...doc.data() }); }); renderClasses();
+            });
+            unsubscribeTasks = db.collection("tareas").where("userId", "==", currentUser.uid).onSnapshot((snapshot) => {
+                tasks = []; snapshot.forEach((doc) => { tasks.push({ id: doc.id, ...doc.data() }); }); renderTasks();
+            });
         }
 
-        // --- RENDERIZADO Y LÓGICA DE CLASES ---
         function renderClasses() {
             const list = document.getElementById('classesList');
             list.innerHTML = '';
             updateSubjectDropdowns(); 
-
             if(classes.length === 0) {
-                list.innerHTML = `
-                    <div class="empty-state">
-                        <i class="fa-regular fa-calendar-xmark"></i>
-                        <p>No tienes clases registradas.<br>Usa el panel superior para agregar tu primera materia.</p>
-                    </div>`;
+                list.innerHTML = `<div class="empty-state"><i class="fa-regular fa-calendar-xmark"></i><p>No tienes clases registradas.</p></div>`;
                 return;
             }
-
             classes.sort((a, b) => a.day - b.day || a.time.localeCompare(b.time));
-
             classes.forEach((cls) => {
                 const imageHTML = cls.img ? `<img src="${cls.img}" alt="Clase">` : `<i class="fa-solid fa-book"></i>`;
                 list.innerHTML += `
                     <div class="list-item">
                         <div class="item-img-box">${imageHTML}</div>
                         <div class="item-info">
-                            <h3>${cls.name}</h3>
-                            <p><i class="fa-regular fa-clock" style="color:var(--primary);"></i> ${daysMapStr[cls.day]} • ${cls.time} - ${cls.endTime}</p>
+                            <h3>${cls.name}</h3><p><i class="fa-regular fa-clock" style="color:var(--primary);"></i> ${daysMapStr[cls.day]} • ${cls.time} - ${cls.endTime}</p>
                         </div>
                         <div class="actions">
-                            <a href="${cls.link}" target="_blank" class="btn-icon play" title="Entrar a clase">
-                                <i class="fa-solid fa-play"></i>
-                            </a>
-                            <button class="btn-icon edit" onclick="editClass('${cls.id}')" title="Editar">
-                                <i class="fa-solid fa-pen"></i>
-                            </button>
-                            <button class="btn-icon delete" onclick="deleteClass('${cls.id}')" title="Eliminar">
-                                <i class="fa-solid fa-trash-can"></i>
-                            </button>
+                            <a href="${cls.link}" target="_blank" class="btn-icon play"><i class="fa-solid fa-play"></i></a>
+                            <button class="btn-icon edit" onclick="editClass('${cls.id}')"><i class="fa-solid fa-pen"></i></button>
+                            <button class="btn-icon delete" onclick="deleteClass('${cls.id}')"><i class="fa-solid fa-trash-can"></i></button>
                         </div>
-                    </div>
-                `;
+                    </div>`;
             });
         }
 
         function updateSubjectDropdowns() {
             const selectTask = document.getElementById('taskSubject');
             const selectAudio = document.getElementById('audioSubject');
-            
-            selectTask.innerHTML = '';
-            selectAudio.innerHTML = '';
-
+            selectTask.innerHTML = selectAudio.innerHTML = '';
             if(classes.length === 0) {
-                selectTask.innerHTML = '<option value="" disabled selected>Registra una clase primero...</option>';
-                selectAudio.innerHTML = '<option value="" disabled selected>Registra una clase primero...</option>';
+                selectTask.innerHTML = selectAudio.innerHTML = '<option value="" disabled selected>Registra una clase primero...</option>';
             } else {
-                selectTask.innerHTML = '<option value="" disabled selected>Selecciona tu asignatura...</option>';
-                selectAudio.innerHTML = '<option value="" disabled selected>Selecciona tu asignatura...</option>';
+                selectTask.innerHTML = selectAudio.innerHTML = '<option value="" disabled selected>Selecciona tu asignatura...</option>';
                 classes.forEach(cls => { 
                     selectTask.innerHTML += `<option value="${cls.name}">${cls.name}</option>`; 
                     selectAudio.innerHTML += `<option value="${cls.name}">${cls.name}</option>`; 
@@ -568,16 +512,13 @@
             const endTime = document.getElementById('classEndTime').value;
             const fileInput = document.getElementById('classImage');
             
-            if(!name || !link || !time || !endTime) return alert('Por favor, completa todos los datos obligatorios.');
+            if(!name || !link || !time || !endTime) return alert('Completa los datos.');
 
             if (editingClassId) {
                 let updateData = { name, link, day, time, endTime };
                 if(fileInput.files.length > 0) {
                     const reader = new FileReader();
-                    reader.onload = function(e) { 
-                        updateData.img = e.target.result;
-                        db.collection("clases").doc(editingClassId).update(updateData).then(resetClassForm);
-                    };
+                    reader.onload = function(e) { updateData.img = e.target.result; db.collection("clases").doc(editingClassId).update(updateData).then(resetClassForm); };
                     reader.readAsDataURL(fileInput.files[0]);
                 } else {
                     db.collection("clases").doc(editingClassId).update(updateData).then(resetClassForm);
@@ -595,172 +536,153 @@
 
         function saveAndCreateAlarm(name, link, day, time, endTime, imgBase64) {
             db.collection("clases").add({ userId: currentUser.uid, name, link, day, time, endTime, img: imgBase64 });
-
             const parsedDay = parseInt(day);
             const gcalDays = {1: "MO", 2: "TU", 3: "WE", 4: "TH", 5: "FR", 6: "SA", 7: "SU"};
-            let date = new Date();
-            let distance = parsedDay - date.getDay();
-            if (distance < 0) distance += 7; 
-            date.setDate(date.getDate() + distance);
-
+            let date = new Date(); let distance = parsedDay - date.getDay(); if (distance < 0) distance += 7; date.setDate(date.getDate() + distance);
             const pad = n => String(n).padStart(2, '0');
-            let [startHours, startMinutes] = time.split(':');
-            let dateString = `${date.getFullYear()}${pad(date.getMonth()+1)}${pad(date.getDate())}T${pad(startHours)}${pad(startMinutes)}00`;
-            
-            let [endHours, endMinutes] = endTime.split(':');
-            let endDate = new Date(date);
-            endDate.setHours(parseInt(endHours), parseInt(endMinutes));
-            let endString = `${endDate.getFullYear()}${pad(endDate.getMonth()+1)}${pad(endDate.getDate())}T${pad(endHours)}${pad(endMinutes)}00`;
-
+            let [startHours, startMinutes] = time.split(':'); let dateString = `${date.getFullYear()}${pad(date.getMonth()+1)}${pad(date.getDate())}T${pad(startHours)}${pad(startMinutes)}00`;
+            let [endHours, endMinutes] = endTime.split(':'); let endDate = new Date(date); endDate.setHours(parseInt(endHours), parseInt(endMinutes)); let endString = `${endDate.getFullYear()}${pad(endDate.getMonth()+1)}${pad(endDate.getDate())}T${pad(endHours)}${pad(endMinutes)}00`;
             const calendarUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(name)}&dates=${dateString}/${endString}&details=${encodeURIComponent("Enlace: " + link)}&recur=RRULE:FREQ=WEEKLY;BYDAY=${gcalDays[parsedDay]}`;
-
-            resetClassForm();
-            window.open(calendarUrl, '_blank');
+            resetClassForm(); window.open(calendarUrl, '_blank');
         }
 
         function editClass(id) {
-            const cls = classes.find(c => c.id === id);
-            if(!cls) return;
-            document.getElementById('className').value = cls.name;
-            document.getElementById('classLink').value = cls.link;
-            document.getElementById('classDay').value = cls.day;
-            document.getElementById('classTime').value = cls.time;
-            document.getElementById('classEndTime').value = cls.endTime;
-            
-            editingClassId = id;
-            document.getElementById('btnSaveClass').innerHTML = '<i class="fa-solid fa-save"></i> Guardar Cambios';
-            document.getElementById('className').focus();
-            window.scrollTo({ top: 0, behavior: 'smooth' });
+            const cls = classes.find(c => c.id === id); if(!cls) return;
+            document.getElementById('className').value = cls.name; document.getElementById('classLink').value = cls.link;
+            document.getElementById('classDay').value = cls.day; document.getElementById('classTime').value = cls.time; document.getElementById('classEndTime').value = cls.endTime;
+            editingClassId = id; document.getElementById('btnSaveClass').innerHTML = '<i class="fa-solid fa-save"></i> Guardar Cambios'; window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
         function resetClassForm() {
-            editingClassId = null;
-            document.getElementById('className').value = '';
-            document.getElementById('classLink').value = '';
-            document.getElementById('classImage').value = ''; 
-            document.getElementById('fileNameDisplay').textContent = 'Adjuntar imagen...';
-            document.getElementById('btnSaveClass').innerHTML = '<i class="fa-regular fa-calendar-plus"></i> Guardar y Crear Alarma';
+            editingClassId = null; document.getElementById('className').value = ''; document.getElementById('classLink').value = ''; document.getElementById('classImage').value = ''; 
+            document.getElementById('fileNameDisplay').textContent = 'Adjuntar imagen...'; document.getElementById('btnSaveClass').innerHTML = '<i class="fa-regular fa-calendar-plus"></i> Guardar y Crear Alarma';
         }
 
-        function deleteClass(firebaseId) {
-            if(confirm("¿Seguro que deseas eliminar esta clase de tu agenda?")) db.collection("clases").doc(firebaseId).delete();
-        }
+        function deleteClass(firebaseId) { if(confirm("¿Eliminar clase?")) db.collection("clases").doc(firebaseId).delete(); }
 
-        // --- RENDERIZADO Y LÓGICA DE TAREAS ---
         function renderTasks() {
-            const list = document.getElementById('tasksList');
-            list.innerHTML = '';
-            
-            if(tasks.length === 0) {
-                list.innerHTML = `
-                    <div class="empty-state">
-                        <i class="fa-solid fa-mug-hot" style="font-size: 2rem;"></i>
-                        <p>No tienes tareas pendientes.<br>¡Disfruta tu tiempo libre!</p>
-                    </div>`;
-                return;
-            }
-
+            const list = document.getElementById('tasksList'); list.innerHTML = '';
+            if(tasks.length === 0) { list.innerHTML = `<div class="empty-state"><i class="fa-solid fa-mug-hot" style="font-size: 2rem;"></i><p>No tienes tareas pendientes.</p></div>`; return; }
             tasks.sort((a, b) => new Date(a.date + 'T' + a.time) - new Date(b.date + 'T' + b.time));
-
             tasks.forEach((tsk) => {
-                const dueDate = new Date(tsk.date + 'T' + tsk.time);
-                const now = new Date();
-                const isUrgent = (dueDate - now) > 0 && (dueDate - now) < (24 * 60 * 60 * 1000); 
-                const urgentClass = isUrgent ? 'urgent' : '';
-
-                const dateObj = new Date(tsk.date + 'T12:00:00');
-                const dateStr = dateObj.toLocaleDateString('es-ES', { month: 'short', day: 'numeric' });
-
+                const dueDate = new Date(tsk.date + 'T' + tsk.time); const now = new Date(); const isUrgent = (dueDate - now) > 0 && (dueDate - now) < (24 * 60 * 60 * 1000); const urgentClass = isUrgent ? 'urgent' : '';
+                const dateStr = new Date(tsk.date + 'T12:00:00').toLocaleDateString('es-ES', { month: 'short', day: 'numeric' });
                 list.innerHTML += `
                     <div class="list-item task-item ${urgentClass}" id="task-${tsk.id}">
-                        <div class="item-info">
-                            <h3>${tsk.name}</h3>
-                            <div><span class="task-tag"><i class="fa-solid fa-bookmark"></i> ${tsk.subject}</span></div>
-                            <p style="margin-top: 4px; color: ${isUrgent ? '#ef4444' : '#94a3b8'};">
-                                <i class="fa-regular fa-calendar-xmark"></i> Límite: ${dateStr} - ${tsk.time}
-                            </p>
-                        </div>
-                        <div class="actions" style="flex-direction: column;">
-                            <button class="btn-icon success" onclick="completeTask('${tsk.id}')" title="Marcar completada">
-                                <i class="fa-solid fa-check"></i>
-                            </button>
-                            <button class="btn-icon edit" onclick="editTask('${tsk.id}')" title="Modificar">
-                                <i class="fa-solid fa-pen"></i>
-                            </button>
-                            <button class="btn-icon delete" onclick="deleteTask('${tsk.id}')" title="Eliminar">
-                                <i class="fa-solid fa-trash-can"></i>
-                            </button>
-                        </div>
-                    </div>
-                `;
+                        <div class="item-info"><h3>${tsk.name}</h3><div><span class="task-tag"><i class="fa-solid fa-bookmark"></i> ${tsk.subject}</span></div><p style="margin-top: 4px; color: ${isUrgent ? '#ef4444' : '#94a3b8'};"><i class="fa-regular fa-calendar-xmark"></i> Límite: ${dateStr} - ${tsk.time}</p></div>
+                        <div class="actions" style="flex-direction: column;"><button class="btn-icon success" onclick="completeTask('${tsk.id}')"><i class="fa-solid fa-check"></i></button><button class="btn-icon edit" onclick="editTask('${tsk.id}')"><i class="fa-solid fa-pen"></i></button><button class="btn-icon delete" onclick="deleteTask('${tsk.id}')"><i class="fa-solid fa-trash-can"></i></button></div>
+                    </div>`;
             });
         }
 
         function processTask() {
-            const name = document.getElementById('taskName').value.trim();
-            const subject = document.getElementById('taskSubject').value;
-            const date = document.getElementById('taskDate').value;
-            const time = document.getElementById('taskTime').value;
-
+            const name = document.getElementById('taskName').value.trim(); const subject = document.getElementById('taskSubject').value; const date = document.getElementById('taskDate').value; const time = document.getElementById('taskTime').value;
             if(!name || !subject || !date || !time) return alert('Faltan datos obligatorios para la tarea.');
-
-            if (editingTaskId) {
-                db.collection("tareas").doc(editingTaskId).update({ name, subject, date, time }).then(resetTaskForm);
-            } else {
-                db.collection("tareas").add({ userId: currentUser.uid, name, subject, date, time }).then(resetTaskForm);
-            }
+            if (editingTaskId) { db.collection("tareas").doc(editingTaskId).update({ name, subject, date, time }).then(resetTaskForm); } 
+            else { db.collection("tareas").add({ userId: currentUser.uid, name, subject, date, time }).then(resetTaskForm); }
         }
 
         function editTask(id) {
-            const tsk = tasks.find(t => t.id === id);
-            if(!tsk) return;
-            document.getElementById('taskName').value = tsk.name;
-            document.getElementById('taskSubject').value = tsk.subject;
-            document.getElementById('taskDate').value = tsk.date;
-            document.getElementById('taskTime').value = tsk.time;
-            
-            editingTaskId = id;
-            document.getElementById('btnSaveTask').innerHTML = '<i class="fa-solid fa-save"></i> Guardar Cambios';
-            document.getElementById('taskName').focus();
-            window.scrollTo({ top: 0, behavior: 'smooth' });
+            const tsk = tasks.find(t => t.id === id); if(!tsk) return;
+            document.getElementById('taskName').value = tsk.name; document.getElementById('taskSubject').value = tsk.subject; document.getElementById('taskDate').value = tsk.date; document.getElementById('taskTime').value = tsk.time;
+            editingTaskId = id; document.getElementById('btnSaveTask').innerHTML = '<i class="fa-solid fa-save"></i> Guardar Cambios'; window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
-        function resetTaskForm() {
-            editingTaskId = null;
-            document.getElementById('taskName').value = '';
-            document.getElementById('taskSubject').value = '';
-            document.getElementById('taskDate').value = '';
-            document.getElementById('btnSaveTask').innerHTML = '<i class="fa-solid fa-plus"></i> Guardar Actividad';
-        }
+        function resetTaskForm() { editingTaskId = null; document.getElementById('taskName').value = ''; document.getElementById('taskSubject').value = ''; document.getElementById('taskDate').value = ''; document.getElementById('btnSaveTask').innerHTML = '<i class="fa-solid fa-plus"></i> Guardar Actividad'; }
+        function completeTask(firebaseId) { const el = document.getElementById(`task-${firebaseId}`); if (el) el.classList.add('completing'); setTimeout(() => { db.collection("tareas").doc(firebaseId).delete(); }, 300); }
+        function deleteTask(firebaseId) { if(confirm("¿Eliminar esta tarea?")) db.collection("tareas").doc(firebaseId).delete(); }
 
-        function completeTask(firebaseId) {
-            const taskElement = document.getElementById(`task-${firebaseId}`);
-            if (taskElement) taskElement.classList.add('completing');
-            setTimeout(() => { db.collection("tareas").doc(firebaseId).delete(); }, 300);
-        }
 
-        function deleteTask(firebaseId) {
-            if(confirm("¿Eliminar esta tarea de tus pendientes?")) db.collection("tareas").doc(firebaseId).delete();
-        }
-
-        // --- FUNCIÓN PLACEHOLDER PARA LA IA ---
-        function procesarAudioConIA() {
+        // ==========================================================
+        // 🔥 LÓGICA DE INTELIGENCIA ARTIFICIAL GEMINI
+        // ==========================================================
+        async function procesarAudioConIA() {
             const materia = document.getElementById('audioSubject').value;
-            const archivo = document.getElementById('classAudioFile').files[0];
+            const archivoInput = document.getElementById('classAudioFile');
+            const archivo = archivoInput.files[0];
+            
+            // Leemos la llave directamente de lo que el usuario pega en la app
+            const GEMINI_API_KEY = document.getElementById('inputApiKey').value.trim();
 
-            if(!materia) return alert('Por favor selecciona una materia.');
-            if(!archivo) return alert('Por favor selecciona un archivo de audio.');
+            if(!materia) return alert('Por favor selecciona una materia primero.');
+            if(!archivo) return alert('Por favor selecciona un archivo de audio o video para que la IA lo escuche.');
+            if(!GEMINI_API_KEY) return alert('Por favor pega tu API Key de Gemini en el recuadro.');
 
-            document.getElementById('resultadoTranscripcionCard').style.display = 'block';
-            document.getElementById('textoResumenIA').innerHTML = `⏳ Analizando audio y procesando transcripción para <b>${materia}</b>...<br><small style="color:var(--text-muted)">Aquí se mostrarán los puntos clave y tareas detectadas próximamente.</small>`;
+            const tarjetaResultado = document.getElementById('resultadoTranscripcionCard');
+            const textoResultado = document.getElementById('textoResumenIA');
+            const btn = document.getElementById('btnProcesarIA');
+            
+            tarjetaResultado.style.display = 'block';
+            textoResultado.innerHTML = `⏳ <b>Paso 1/2:</b> Subiendo clase a los servidores de IA temporales (Sin consumir tu espacio Firebase)...`;
+            btn.disabled = true;
             window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+
+            try {
+                // 1. Subir el archivo temporalmente a la API de Google
+                const uploadUrl = `https://generativelanguage.googleapis.com/upload/v1beta/files?key=${GEMINI_API_KEY}`;
+                const uploadRes = await fetch(uploadUrl, {
+                    method: 'POST',
+                    headers: {
+                        'X-Goog-Upload-Command': 'start, upload, finalize',
+                        'X-Goog-Upload-Header-Content-Length': archivo.size.toString(),
+                        'X-Goog-Upload-Header-Content-Type': archivo.type,
+                        'Content-Type': archivo.type
+                    },
+                    body: archivo
+                });
+                
+                const uploadData = await uploadRes.json();
+                if(!uploadData.file || !uploadData.file.uri) {
+                    throw new Error("La IA no pudo recibir el archivo (Posible API Key incorrecta). Asegúrate que empiece con 'AIzaSy...'");
+                }
+                
+                const fileUri = uploadData.file.uri;
+
+                textoResultado.innerHTML = `⏳ <b>Paso 2/2:</b> ¡Archivo subido con éxito! Gemini está escuchando tu clase y escribiendo el resumen... (Esto puede tardar un par de minutos)`;
+
+                // 2. Pedir a Gemini que analice la clase
+                const generateUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`;
+                const prompt = `Actúa como el mejor estudiante universitario. Estás escuchando una clase de la materia '${materia}'. Haz un resumen súper detallado con los puntos clave y temas importantes. Al final del resumen, crea una sección que diga 'TAREAS PENDIENTES:' y enlista de forma clara todas las tareas, ensayos o investigaciones que el profesor asignó. Si no dejó tarea, escribe 'No se asignaron tareas en esta sesión'.`;
+
+                const generateRes = await fetch(generateUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        contents: [{
+                            role: 'user',
+                            parts: [
+                                { fileData: { fileUri: fileUri, mimeType: archivo.type } },
+                                { text: prompt }
+                            ]
+                        }]
+                    })
+                });
+
+                const generateData = await generateRes.json();
+                
+                if (generateData.error) throw new Error(generateData.error.message);
+                
+                const respuestaIA = generateData.candidates[0].content.parts[0].text;
+
+                // 3. Mostrar el resultado bonito en pantalla
+                textoResultado.innerHTML = `<b>Resumen Inteligente de ${materia}</b><br><br>${respuestaIA.replace(/\n/g, '<br>')}`;
+                
+                // Limpiar el selector de archivo
+                archivoInput.value = '';
+                document.getElementById('audioFileName').textContent = 'Buscar archivo de clase...';
+
+            } catch (error) {
+                console.error("Error en Gemini:", error);
+                textoResultado.innerHTML = `<span style="color:var(--danger)"><i class="fa-solid fa-triangle-exclamation"></i> Error al procesar: ${error.message}</span>`;
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = `<i class="fa-solid fa-wand-magic-sparkles"></i> Analizar otra clase con Gemini`;
+            }
         }
 
         // --- REGISTRO DEL SERVICE WORKER ---
         if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('./sw.js').catch(err => console.log('Fallo PWA:', err));
-            });
+            window.addEventListener('load', () => { navigator.serviceWorker.register('./sw.js').catch(err => console.log('Fallo PWA:', err)); });
         }
     </script>
 </body>
