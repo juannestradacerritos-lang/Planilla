@@ -11,6 +11,9 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
+    <!-- LIBRERÍA PARA GENERAR PDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
     <style>
         :root {
             color-scheme: dark; 
@@ -168,6 +171,9 @@
         .btn-ai:hover { box-shadow: 0 12px 25px rgba(6, 182, 212, 0.4); }
         .btn-ai:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
 
+        .btn-pdf { background: linear-gradient(135deg, #ef4444, #b91c1c); box-shadow: 0 8px 20px rgba(239, 68, 68, 0.3); }
+        .btn-pdf:hover { box-shadow: 0 12px 25px rgba(239, 68, 68, 0.4); }
+
         .list-item {
             background: rgba(15, 23, 42, 0.6); border: 1px solid var(--border-light); padding: 16px;
             border-radius: 16px; margin-bottom: 12px; display: flex; justify-content: space-between;
@@ -215,6 +221,19 @@
         .empty-state { text-align: center; padding: 20px; color: var(--text-muted); display: flex; flex-direction: column; align-items: center; gap: 10px; }
         .empty-state i { font-size: 2.5rem; opacity: 0.3; }
         .empty-state p { font-size: 0.95rem; font-weight: 500; }
+        
+        /* ESTILO PARA EL PDF: Letra oscura sobre fondo blanco para que se lea e imprima bien */
+        #contenedorPDF {
+            background: #ffffff;
+            color: #000000;
+            padding: 30px;
+            border-radius: 8px;
+            font-family: Arial, sans-serif;
+            font-size: 12pt;
+            line-height: 1.6;
+        }
+        #contenedorPDF h2 { color: #1e293b; border-bottom: 2px solid #3b82f6; padding-bottom: 10px; margin-bottom: 20px;}
+        #contenedorPDF strong { color: #1e293b; }
     </style>
 </head>
 <body>
@@ -356,7 +375,7 @@
         <!-- =================== SECCIÓN DE AUDIO / TRANSCRIPCIÓN (GEMINI IA) =================== -->
         <div id="vista-audio" style="display: none;">
             <div class="card">
-                <div class="card-title" style="color: var(--ai-color);"><i class="fa-solid fa-microphone-lines"></i> Resumen de Clase por IA</div>
+                <div class="card-title" style="color: var(--ai-color);"><i class="fa-solid fa-microphone-lines"></i> Analizador de Clase</div>
                 
                 <div class="form-group" style="margin-bottom: 16px;">
                     <label>Selecciona la materia</label>
@@ -371,6 +390,15 @@
                         <input type="file" id="classAudioFile" accept="audio/*,video/*" onchange="actualizarNombreAudio(this)">
                     </label>
                 </div>
+
+                <!-- NUEVA OPCIÓN: ELEGIR QUÉ HARÁ LA IA -->
+                <div class="form-group" style="margin-bottom: 16px;">
+                    <label>¿Qué deseas hacer?</label>
+                    <select id="tipoAnalisisIA" class="form-control" style="color: var(--ai-color); font-weight: 600;">
+                        <option value="transcripcion">1. Solo Transcribir Exactamente (Sin explicar)</option>
+                        <option value="resumen">2. Hacer un Resumen y sacar Tareas</option>
+                    </select>
+                </div>
                 
                 <div class="form-group" style="margin-bottom: 16px;">
                     <label>Tu Llave de IA (Gemini API Key)</label>
@@ -378,13 +406,26 @@
                 </div>
 
                 <button id="btnProcesarIA" onclick="procesarAudioConIA()" class="btn-primary btn-ai">
-                    <i class="fa-solid fa-wand-magic-sparkles"></i> Analizar Clase con Gemini IA
+                    <i class="fa-solid fa-wand-magic-sparkles"></i> Analizar Clase
                 </button>
             </div>
 
+            <!-- TARJETA DONDE SE MUESTRA EL TEXTO PARA PDF -->
             <div class="card" id="resultadoTranscripcionCard" style="display: none;">
-                <div class="card-title" style="color: var(--ai-color);"><i class="fa-solid fa-file-lines"></i> Notas Inteligentes</div>
-                <div id="textoResumenIA" style="font-size: 0.95rem; color: var(--text-main); line-height: 1.6; white-space: pre-line;"></div>
+                <div class="card-title" style="color: var(--ai-color);"><i class="fa-solid fa-file-lines"></i> Notas Generadas</div>
+                
+                <!-- Este contenedor oculto es el que se transformará en PDF bonito -->
+                <div style="display: none;">
+                    <div id="contenedorPDF"></div>
+                </div>
+
+                <!-- Esto es lo que se ve en la pantalla de la app (Modo oscuro) -->
+                <div id="textoResumenIA" style="font-size: 0.95rem; color: var(--text-main); line-height: 1.6; white-space: pre-line; max-height: 400px; overflow-y: auto; padding-right: 10px;"></div>
+                
+                <!-- NUEVO BOTÓN PARA DESCARGAR PDF -->
+                <button id="btnDescargarPDF" onclick="generarYDescargarPDF()" class="btn-primary btn-pdf" style="margin-top: 20px; display: none;">
+                    <i class="fa-solid fa-file-pdf"></i> Guardar como PDF
+                </button>
             </div>
         </div>
 
@@ -441,7 +482,7 @@
             document.getElementById('vista-tareas').style.display = (vista === 'tareas') ? 'block' : 'none';
             document.getElementById('vista-audio').style.display = (vista === 'audio') ? 'block' : 'none';
 
-            const titulos = { 'clases': 'Agenda de Clases', 'tareas': 'Mis Tareas', 'audio': 'Transcripción IA' };
+            const titulos = { 'clases': 'Agenda de Clases', 'tareas': 'Mis Tareas', 'audio': 'IA de Clases' };
             document.getElementById('vistaActualTexto').textContent = titulos[vista];
         }
 
@@ -463,7 +504,6 @@
         });
         
         function loginWithGoogle() { auth.signInWithPopup(provider).catch(error => console.error(error)); }
-        
         function logout() { auth.signOut(); }
 
         document.getElementById('classImage').addEventListener('change', function(e) {
@@ -561,7 +601,6 @@
 
         function saveAndCreateAlarm(name, link, day, time, endTime, imgBase64) {
             db.collection("clases").add({ userId: currentUser.uid, name, link, day, time, endTime, img: imgBase64 });
-            
             const parsedDay = parseInt(day);
             const gcalDays = {1: "MO", 2: "TU", 3: "WE", 4: "TH", 5: "FR", 6: "SA", 7: "SU"};
             let date = new Date(); let distance = parsedDay - date.getDay(); if (distance < 0) distance += 7; date.setDate(date.getDate() + distance);
@@ -661,24 +700,24 @@
         function completeTask(firebaseId) { 
             const el = document.getElementById(`task-${firebaseId}`); 
             if (el) el.classList.add('completing'); 
-            setTimeout(() => { 
-                db.collection("tareas").doc(firebaseId).delete();
-            }, 300); 
+            setTimeout(() => { db.collection("tareas").doc(firebaseId).delete(); }, 300); 
         }
 
         function deleteTask(firebaseId) { 
-            if(confirm("¿Eliminar esta tarea?")) {
-                db.collection("tareas").doc(firebaseId).delete(); 
-            }
+            if(confirm("¿Eliminar esta tarea?")) { db.collection("tareas").doc(firebaseId).delete(); }
         }
 
         // ==========================================================
-        // 🔥 LÓGICA DE IA (GEMINI ACTUALIZADO) CON FALLBACK ARRAY
+        // 🔥 LÓGICA DE IA CON SELECCIÓN MÚLTIPLE (TRANSCRIBIR/RESUMIR)
         // ==========================================================
+        let materiaActualGenerada = ""; // Variable global para usarla en el nombre del PDF
+
         async function procesarAudioConIA() {
             const materia = document.getElementById('audioSubject').value;
+            materiaActualGenerada = materia; // Guardamos para el PDF
             const archivoInput = document.getElementById('classAudioFile');
             const archivo = archivoInput.files[0];
+            const tipoAnalisis = document.getElementById('tipoAnalisisIA').value;
             
             const GEMINI_API_KEY = document.getElementById('inputApiKey').value.trim();
 
@@ -688,11 +727,22 @@
 
             const tarjetaResultado = document.getElementById('resultadoTranscripcionCard');
             const textoResultado = document.getElementById('textoResumenIA');
+            const contenedorPDF = document.getElementById('contenedorPDF');
             const btn = document.getElementById('btnProcesarIA');
+            const btnPDF = document.getElementById('btnDescargarPDF');
             
             tarjetaResultado.style.display = 'block';
+            btnPDF.style.display = 'none'; // Ocultar botón PDF mientras procesa
             btn.disabled = true;
             window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+
+            // CONDICIÓN: Definir el "Prompt" dependiendo de lo que elijas en la pantalla
+            let promptInteligente = "";
+            if (tipoAnalisis === "transcripcion") {
+                promptInteligente = `Transcribe de forma exacta y literal todo lo que se dice en este audio de la materia '${materia}'. Escribe palabra por palabra. No agregues introducciones, no hagas resúmenes, no crees listas de tareas ni agregues comentarios tuyos. Solamente devuelve el texto completo de lo que se escucha en la clase.`;
+            } else {
+                promptInteligente = `Actúa como el mejor estudiante universitario. Lee esta clase de la materia '${materia}'. Haz un resumen súper detallado con los puntos clave. Al final del resumen, crea una sección que diga 'TAREAS PENDIENTES:' y enlista de forma clara todas las tareas, ensayos o investigaciones que el profesor asignó. Si no dejó tarea, escribe 'No se asignaron tareas en esta sesión'.`;
+            }
 
             try {
                 textoResultado.innerHTML = `⏳ <b>Paso 1/2:</b> Subiendo archivo a los servidores de Gemini...`;
@@ -722,12 +772,10 @@
 
                 let exitoChat = false;
                 let respuestaFinal = "";
-                
-                const promptInteligente = `Actúa como el mejor estudiante universitario. Lee esta clase de la materia '${materia}'. Haz un resumen súper detallado con los puntos clave. Al final del resumen, crea una sección que diga 'TAREAS PENDIENTES:' y enlista de forma clara todas las tareas, ensayos o investigaciones que el profesor asignó. Si no dejó tarea, escribe 'No se asignaron tareas en esta sesión'.`;
 
                 for (let i = 0; i < modelosDeRespaldo.length; i++) {
                     let modeloActual = modelosDeRespaldo[i];
-                    textoResultado.innerHTML = `⏳ <b>Paso 2/2:</b> Analizando con el modelo <b>${modeloActual}</b>...`;
+                    textoResultado.innerHTML = `⏳ <b>Paso 2/2:</b> Generando el documento usando <b>${modeloActual}</b>...`;
 
                     try {
                         const generateUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modeloActual}:generateContent?key=${GEMINI_API_KEY}`;
@@ -756,7 +804,7 @@
                         break; 
 
                     } catch (error) {
-                        console.warn(`Gemini ${modeloActual} no disponible o saturado:`, error.message);
+                        console.warn(`Gemini ${modeloActual} no disponible:`, error.message);
                         if (i === modelosDeRespaldo.length - 1) {
                             throw new Error("Todos los modelos gratuitos están saturados ahora mismo. Por favor, intenta de nuevo en unos minutos. " + error.message);
                         }
@@ -764,9 +812,18 @@
                 }
 
                 if (exitoChat) {
-                    textoResultado.innerHTML = `<b>Resumen Inteligente de ${materia}</b><br><br>${respuestaFinal.replace(/\n/g, '<br>')}`;
+                    // Mostrar en pantalla (modo oscuro)
+                    let tituloMostrar = tipoAnalisis === "transcripcion" ? "Transcripción Literal de" : "Resumen Inteligente de";
+                    textoResultado.innerHTML = `<b>${tituloMostrar} ${materia}</b><br><br>${respuestaFinal.replace(/\n/g, '<br>')}`;
+                    
+                    // Llenar el contenedor oculto para el PDF (fondo blanco para que se imprima bien)
+                    contenedorPDF.innerHTML = `<h2>${tituloMostrar} ${materia}</h2><p>${respuestaFinal.replace(/\n/g, '<br>')}</p><br><br><small>Generado con Panel Universitario Pro IA</small>`;
+                    
+                    // Mostrar el botón de PDF y limpiar el archivo
+                    btnPDF.style.display = 'block';
                     archivoInput.value = '';
                     document.getElementById('audioFileName').textContent = 'Buscar archivo de clase...';
+                    window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
                 }
 
             } catch (error) {
@@ -774,8 +831,31 @@
                 textoResultado.innerHTML = `<span style="color:var(--danger)"><i class="fa-solid fa-triangle-exclamation"></i> Error: ${error.message}</span>`;
             } finally {
                 btn.disabled = false;
-                btn.innerHTML = `<i class="fa-solid fa-wand-magic-sparkles"></i> Analizar otra clase con Gemini IA`;
+                btn.innerHTML = `<i class="fa-solid fa-wand-magic-sparkles"></i> Analizar Clase`;
             }
+        }
+
+        // ==========================================================
+        // 🔥 FUNCIÓN PARA CREAR Y DESCARGAR EL PDF MÁGICAMENTE
+        // ==========================================================
+        function generarYDescargarPDF() {
+            const elementoParaPDF = document.getElementById('contenedorPDF');
+            
+            // Hacemos que el elemento sea temporalmente visible para que la librería lo pueda "fotografiar"
+            elementoParaPDF.parentElement.style.display = 'block';
+            
+            const opcionesPDF = {
+                margin:       15,
+                filename:     `Apuntes_${materiaActualGenerada}_${new Date().toISOString().split('T')[0]}.pdf`,
+                image:        { type: 'jpeg', quality: 0.98 },
+                html2canvas:  { scale: 2, useCORS: true },
+                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+
+            // Crear el PDF y ocultar de nuevo el contenedor original al terminar
+            html2pdf().set(opcionesPDF).from(elementoParaPDF).save().then(() => {
+                elementoParaPDF.parentElement.style.display = 'none';
+            });
         }
 
         if ('serviceWorker' in navigator) {
