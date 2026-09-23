@@ -43,7 +43,8 @@
         }
         /* Pantalla de Login */
         #login-view {
-            display: none; flex-direction: column; align-items: center; justify-content: center;
+            display: none; /* Controlado ahora por JS instantáneo */
+            flex-direction: column; align-items: center; justify-content: center;
             width: 100%; max-width: 400px; text-align: center; gap: 20px;
             margin-top: -40px; 
         }
@@ -56,7 +57,8 @@
         .btn-google:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(255, 255, 255, 0.2); }
 
         .dashboard-wrapper {
-            width: 100%; max-width: 550px; display: flex; flex-direction: column; gap: 25px;
+            width: 100%; max-width: 550px; display: none; /* Controlado ahora por JS instantáneo */
+            flex-direction: column; gap: 25px;
         }
 
         .header { display: flex; align-items: center; gap: 15px; margin-bottom: 5px; justify-content: space-between; }
@@ -259,6 +261,17 @@
         </div>
     </div>
 
+    <!-- 🚀 NUEVO: SCRIPT SÍNCRONO PARA ELIMINAR EL PARPADEO FANTASMA -->
+    <script>
+        if (localStorage.getItem('isLoggedIn') === 'true') {
+            document.getElementById('dashboard-view').style.display = 'flex';
+            document.getElementById('login-view').style.display = 'none';
+        } else {
+            document.getElementById('dashboard-view').style.display = 'none';
+            document.getElementById('login-view').style.display = 'flex';
+        }
+    </script>
+
     <!-- SDK DE FIREBASE -->
     <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-auth-compat.js"></script>
@@ -278,7 +291,7 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
 
-        // 🟢 NUEVO: Activa el caché local para que tus tareas guardadas no desaparezcan si abres la app sin internet
+        // Persistencia Offline
         db.enablePersistence().catch(err => console.log("Persistencia Offline falló:", err));
 
         const auth = firebase.auth();
@@ -291,15 +304,15 @@
        // --- SISTEMA DE AUTENTICACIÓN ---
        auth.onAuthStateChanged((user) => {
             if (user) {
+                localStorage.setItem('isLoggedIn', 'true'); // <-- Guardamos la sesión en memoria para evitar el parpadeo
                 currentUser = user;
-                document.getElementById('login-view').style.display = 'none';
-                document.getElementById('dashboard-view').style.display = 'flex';
                 
                 document.getElementById('userName').textContent = user.displayName;
                 document.getElementById('profileAvatar').innerHTML = `<img src="${user.photoURL}" alt="Perfil">`;
                 
                 loadUserData();
             } else {
+                localStorage.removeItem('isLoggedIn'); // <-- Borramos la memoria si cerramos sesión
                 currentUser = null;
                 document.getElementById('login-view').style.display = 'flex';
                 document.getElementById('dashboard-view').style.display = 'none';
@@ -322,8 +335,7 @@
         let classes = [];
         let tasks = [];
 
-        // --- 🟢 NUEVO: AUTOGUARDADO (BORRADORES) ---
-        // Guarda lo que escribes por si se cierra la app por accidente
+        // --- AUTOGUARDADO (BORRADORES) ---
         function saveFormDrafts() {
             const fields = ['className', 'classLink', 'classDay', 'classTime', 'classEndTime', 'taskName', 'taskDate', 'taskTime'];
             fields.forEach(id => {
@@ -332,7 +344,6 @@
             });
         }
 
-        // Restaura lo que dejaste a medias al volver a entrar
         function restoreFormDrafts() {
             const fields = ['className', 'classLink', 'classDay', 'classTime', 'classEndTime', 'taskName', 'taskDate', 'taskTime'];
             fields.forEach(id => {
@@ -466,7 +477,6 @@
             document.getElementById('classImage').value = ''; 
             document.getElementById('fileNameDisplay').textContent = 'Subir portada...';
 
-            // Limpiamos los borradores cuando la clase ya se guardó con éxito
             ['className', 'classLink'].forEach(id => localStorage.removeItem('draft_' + id));
 
             window.open(calendarUrl, '_blank');
@@ -534,7 +544,6 @@
                 document.getElementById('taskSubject').value = '';
                 document.getElementById('taskDate').value = '';
                 
-                // Limpiamos los borradores de la tarea al guardarla
                 ['taskName', 'taskDate'].forEach(id => localStorage.removeItem('draft_' + id));
             });
         }
