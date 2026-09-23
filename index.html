@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mis Clases y Tareas</title>
     
-    <!-- PASO 3-A: Vinculación del Manifiesto y color de tema para la PWA -->
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#3b82f6">
 
@@ -41,36 +40,40 @@
             overflow-x: hidden;
         }
 
+        /* Pantalla de Login (NUEVO) */
+        #login-view {
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            width: 100%; max-width: 400px; text-align: center; gap: 20px;
+        }
+        #login-view h1 { font-size: 2rem; background: var(--gradient-text); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .btn-google {
+            background: #fff; color: #1e293b; border: none; padding: 12px 20px; border-radius: 10px;
+            font-weight: 600; font-size: 1rem; cursor: pointer; transition: 0.2s;
+            display: flex; justify-content: center; align-items: center; gap: 10px; width: 100%; box-shadow: 0 4px 15px rgba(255, 255, 255, 0.1);
+        }
+        .btn-google:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(255, 255, 255, 0.2); }
+
         .dashboard-wrapper {
-            width: 100%;
-            max-width: 550px;
-            display: flex;
-            flex-direction: column;
-            gap: 25px;
+            width: 100%; max-width: 550px; display: none; flex-direction: column; gap: 25px;
         }
 
-        .header { display: flex; align-items: center; gap: 15px; margin-bottom: 5px; }
-
+        .header { display: flex; align-items: center; gap: 15px; margin-bottom: 5px; justify-content: space-between; }
+        
+        .profile-section { display: flex; align-items: center; gap: 15px; }
         .avatar {
-            width: 55px;
-            height: 55px;
-            background: var(--gradient-text);
-            border-radius: 14px;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 1.2rem; font-weight: 700; color: #fff;
-            box-shadow: 0 8px 16px rgba(56, 189, 248, 0.2);
-            cursor: pointer; overflow: hidden; position: relative; transition: 0.3s;
+            width: 55px; height: 55px; background: var(--gradient-text); border-radius: 14px;
+            display: flex; align-items: center; justify-content: center; color: #fff;
+            box-shadow: 0 8px 16px rgba(56, 189, 248, 0.2); overflow: hidden;
         }
         .avatar img { width: 100%; height: 100%; object-fit: cover; }
-        .avatar:hover::after {
-            content: '\f030'; font-family: 'Font Awesome 6 Free'; font-weight: 900;
-            position: absolute; background: rgba(0,0,0,0.6); width: 100%; height: 100%;
-            display: flex; align-items: center; justify-content: center; font-size: 1.2rem;
+        .header-text h1 { font-size: 1.3rem; font-weight: 700; color: #fff; }
+        .header-text p { font-size: 0.85rem; color: var(--primary); font-weight: 600; }
+        
+        .btn-logout {
+            background: rgba(239, 68, 68, 0.1); color: var(--danger); border: 1px solid rgba(239, 68, 68, 0.3);
+            padding: 8px 12px; border-radius: 8px; font-size: 0.85rem; cursor: pointer; transition: 0.2s; font-weight: 600;
         }
-        .header-text h1 {
-            font-size: 1.5rem; font-weight: 700; background: var(--gradient-text);
-            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-        }
+        .btn-logout:hover { background: var(--danger); color: #fff; }
 
         .card {
             background: var(--card-bg); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
@@ -105,11 +108,10 @@
             background: linear-gradient(to right, var(--primary), var(--primary-hover)); color: white;
             border: none; padding: 14px; border-radius: 10px; font-weight: 600; font-size: 1rem;
             cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; width: 100%;
-            display: flex; justify-content: center; align-items: center; gap: 10px;
-            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4); margin-top: 10px;
+            display: flex; justify-content: center; align-items: center; gap: 10px; margin-top: 10px;
         }
         .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(59, 130, 246, 0.6); }
-        .btn-secondary { background: linear-gradient(to right, var(--secondary), var(--secondary-hover)); box-shadow: 0 4px 15px rgba(139, 92, 246, 0.4); }
+        .btn-secondary { background: linear-gradient(to right, var(--secondary), var(--secondary-hover)); }
         .btn-secondary:hover { box-shadow: 0 6px 20px rgba(139, 92, 246, 0.6); }
 
         .list-item {
@@ -138,7 +140,7 @@
         .btn-icon {
             background: rgba(255, 255, 255, 0.05); border: 1px solid var(--border-color); color: #fff;
             width: 36px; height: 36px; border-radius: 8px; display: flex; align-items: center; justify-content: center;
-            cursor: pointer; transition: all 0.2s; text-decoration: none;
+            cursor: pointer; transition: all 0.2s;
         }
         .btn-icon.play { color: var(--primary); }
         .btn-icon.play:hover { background: rgba(59, 130, 246, 0.2); border-color: var(--primary); }
@@ -146,22 +148,34 @@
         .btn-icon.success:hover { background: rgba(16, 185, 129, 0.2); border-color: var(--success); }
         .btn-icon.delete { color: var(--danger); }
         .btn-icon.delete:hover { background: rgba(239, 68, 68, 0.2); border-color: var(--danger); }
-
-        @media (max-width: 480px) { .form-row { flex-direction: column; gap: 0; } }
     </style>
 </head>
 <body>
 
-    <div class="dashboard-wrapper">
-        <!-- Cabecera -->
+    <!-- PANTALLA DE INICIO DE SESIÓN -->
+    <div id="login-view">
+        <i class="fa-solid fa-graduation-cap" style="font-size: 4rem; color: #3b82f6;"></i>
+        <h1>Clases y Tareas</h1>
+        <p style="color: #94a3b8; margin-bottom: 20px;"        
+<button class="btn-google" onclick="loginWithGoogle()">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg" width="20" alt="Google">
+            Iniciar sesión con Google
+        </button>
+    </div>
+
+    <!-- PANEL PRINCIPAL (Oculto hasta iniciar sesión) -->
+    <div class="dashboard-wrapper" id="dashboard-view">
+        
+        <!-- Cabecera Personalizada -->
         <div class="header">
-            <input type="file" id="profileUpload" accept="image/*" style="display: none;">
-            <div class="avatar" id="profileAvatar" onclick="document.getElementById('profileUpload').click()" title="Cambiar foto de perfil">
-                JD
+            <div class="profile-section">
+                <div class="avatar" id="profileAvatar"></div>
+                <div class="header-text">
+                    <h1 id="userName">Cargando...</h1>
+                    <p>Mi Espacio Privado</p>
+                </div>
             </div>
-            <div class="header-text">
-                <h1>Panel de clases y tareas</h1>
-            </div>
+            <button class="btn-logout" onclick="logout()"><i class="fa-solid fa-arrow-right-from-bracket"></i> Salir</button>
         </div>
 
         <!-- Formulario de Clases -->
@@ -210,7 +224,7 @@
         <!-- Lista de Clases -->
         <div class="card">
             <div class="card-title" style="color: #f8fafc;"><i class="fa-solid fa-list-check" style="color: #38bdf8;"></i> Agenda de la Semana</div>
-            <div id="classesList"><p style="text-align:center; color:#94a3b8; font-size: 0.9rem; margin-top: 10px;">Cargando clases desde la nube...</p></div>
+            <div id="classesList"><p style="text-align:center; color:#94a3b8; font-size: 0.9rem; margin-top: 10px;">Sincronizando con la nube...</p></div>
         </div>
 
         <!-- Gestor de Tareas -->
@@ -245,8 +259,9 @@
         </div>
     </div>
 
-    <!-- SDK DE FIREBASE (Añadido para conectividad a la nube) -->
+    <!-- SDK DE FIREBASE (Con módulo de Autenticación añadido) -->
     <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore-compat.js"></script>
 
     <script>
@@ -262,59 +277,87 @@
         };
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
+        const auth = firebase.auth();
+        const provider = new firebase.auth.GoogleAuthProvider();
 
-        // --- UX: FOTO DE PERFIL (Se mantiene en memoria local por velocidad) ---
-        const profileUpload = document.getElementById('profileUpload');
-        const profileAvatar = document.getElementById('profileAvatar');
-        const savedAvatar = localStorage.getItem('miPerfilImg');
-        if(savedAvatar) profileAvatar.innerHTML = `<img src="${savedAvatar}" alt="Perfil">`;
+        let currentUser = null;
+        let unsubscribeClasses = null;
+        let unsubscribeTasks = null;
 
-        profileUpload.addEventListener('change', function() {
-            const file = this.files[0];
-            if(file) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    const base64Img = e.target.result;
-                    localStorage.setItem('miPerfilImg', base64Img);
-                    profileAvatar.innerHTML = `<img src="${base64Img}" alt="Perfil">`;
-                };
-                reader.readAsDataURL(file);
+        // --- SISTEMA DE AUTENTICACIÓN ---
+        auth.onAuthStateChanged((user) => {
+            if (user) {
+                // Usuario conectó su cuenta
+                currentUser = user;
+                document.getElementById('login-view').style.display = 'none';
+                document.getElementById('dashboard-view').style.display = 'flex';
+                
+                // Cargar su foto y nombre real de Google
+                document.getElementById('userName').textContent = user.displayName;
+                document.getElementById('profileAvatar').innerHTML = `<img src="${user.photoURL}" alt="Perfil">`;
+                
+                // Iniciar la descarga de SU información privada
+                loadUserData();
+            } else {
+                // Nadie conectado
+                currentUser = null;
+                document.getElementById('login-view').style.display = 'flex';
+                document.getElementById('dashboard-view').style.display = 'none';
+                
+                // Detener descargas
+                if(unsubscribeClasses) unsubscribeClasses();
+                if(unsubscribeTasks) unsubscribeTasks();
             }
         });
 
+        function loginWithGoogle() { auth.signInWithPopup(provider); }
+        function logout() { auth.signOut(); }
+
+        // --- UX FORMULARIO ---
         document.getElementById('classImage').addEventListener('change', function(e) {
             const fileName = e.target.files[0] ? e.target.files[0].name : "Subir portada...";
             document.getElementById('fileNameDisplay').textContent = fileName;
         });
 
         const daysMapStr = { "1": "Lunes", "2": "Martes", "3": "Miércoles", "4": "Jueves", "5": "Viernes" };
-        
-        // --- GESTIÓN DE CLASES EN FIREBASE ---
         let classes = [];
+        let tasks = [];
 
-        // Escucha en tiempo real la nube de Firebase
-        db.collection("clases").onSnapshot((snapshot) => {
-            classes = [];
-            snapshot.forEach((doc) => {
-                classes.push({ id: doc.id, ...doc.data() });
-            });
-            renderClasses();
-        });
+        // --- CARGAR DATOS PRIVADOS DEL USUARIO ---
+        function loadUserData() {
+            // Escuchar SOLO las clases del usuario actual (userId)
+            unsubscribeClasses = db.collection("clases")
+                .where("userId", "==", currentUser.uid)
+                .onSnapshot((snapshot) => {
+                    classes = [];
+                    snapshot.forEach((doc) => { classes.push({ id: doc.id, ...doc.data() }); });
+                    renderClasses();
+                });
 
+            // Escuchar SOLO las tareas del usuario actual
+            unsubscribeTasks = db.collection("tareas")
+                .where("userId", "==", currentUser.uid)
+                .onSnapshot((snapshot) => {
+                    tasks = [];
+                    snapshot.forEach((doc) => { tasks.push({ id: doc.id, ...doc.data() }); });
+                    renderTasks();
+                });
+        }
+
+        // --- RENDERIZADO Y LÓGICA DE CLASES ---
         function renderClasses() {
             const list = document.getElementById('classesList');
             list.innerHTML = '';
-            
             updateSubjectDropdown(); 
 
             if(classes.length === 0) {
-                list.innerHTML = '<p style="text-align:center; color:#94a3b8; font-size: 0.9rem; margin-top: 10px;">No hay clases configuradas aún.</p>';
+                list.innerHTML = '<p style="text-align:center; color:#94a3b8; font-size: 0.9rem; margin-top: 10px;">Empieza agregando tu primera clase.</p>';
                 return;
             }
 
             classes.sort((a, b) => a.day - b.day || a.time.localeCompare(b.time));
 
-            classes.forEach((cls, index) => {
+            classes.forEach((cls) => {
                 const imageHTML = cls.img ? `<img src="${cls.img}" alt="Clase">` : `<i class="fa-solid fa-book"></i>`;
                 list.innerHTML += `
                     <div class="list-item">
@@ -344,9 +387,7 @@
                 select.innerHTML = '<option value="" disabled selected>Agrega una clase arriba primero</option>';
             } else {
                 select.innerHTML = '<option value="" disabled selected>Selecciona tu clase...</option>';
-                classes.forEach(cls => {
-                    select.innerHTML += `<option value="${cls.name}">${cls.name}</option>`;
-                });
+                classes.forEach(cls => { select.innerHTML += `<option value="${cls.name}">${cls.name}</option>`; });
             }
         }
 
@@ -362,9 +403,7 @@
 
             if(fileInput.files.length > 0) {
                 const reader = new FileReader();
-                reader.onload = function(e) {
-                    saveAndCreateAlarm(name, link, day, time, endTime, e.target.result);
-                };
+                reader.onload = function(e) { saveAndCreateAlarm(name, link, day, time, endTime, e.target.result); };
                 reader.readAsDataURL(fileInput.files[0]);
             } else {
                 saveAndCreateAlarm(name, link, day, time, endTime, null);
@@ -372,12 +411,10 @@
         }
 
         function saveAndCreateAlarm(name, link, day, time, endTime, imgBase64) {
-            // Guardar en Firebase
-            db.collection("clases").add({ name, link, day, time, endTime, img: imgBase64 })
-            .then(() => {
-                console.log("Clase guardada en la nube con éxito");
-            }).catch((error) => {
-                console.error("Error al guardar clase en Firebase: ", error);
+            // Se añade el "userId" para vincular la clase al usuario que la está creando
+            db.collection("clases").add({ 
+                userId: currentUser.uid, 
+                name, link, day, time, endTime, img: imgBase64 
             });
 
             const parsedDay = parseInt(day);
@@ -412,29 +449,19 @@
             }
         }
 
-        // --- GESTIÓN DE TAREAS EN FIREBASE ---
-        let tasks = [];
-
-        db.collection("tareas").onSnapshot((snapshot) => {
-            tasks = [];
-            snapshot.forEach((doc) => {
-                tasks.push({ id: doc.id, ...doc.data() });
-            });
-            renderTasks();
-        });
-
+        // --- RENDERIZADO Y LÓGICA DE TAREAS ---
         function renderTasks() {
             const list = document.getElementById('tasksList');
             list.innerHTML = '';
             
             if(tasks.length === 0) {
-                list.innerHTML = '<p style="text-align:center; color:#94a3b8; font-size: 0.9rem;">No tienes tareas pendientes.</p>';
+                list.innerHTML = '<p style="text-align:center; color:#94a3b8; font-size: 0.9rem;">No tienes tareas pendientes</p>';
                 return;
             }
 
             tasks.sort((a, b) => new Date(a.date + 'T' + a.time) - new Date(b.date + 'T' + b.time));
 
-            tasks.forEach((tsk, index) => {
+            tasks.forEach((tsk) => {
                 const dueDate = new Date(tsk.date + 'T' + tsk.time);
                 const now = new Date();
                 const isUrgent = (dueDate - now) > 0 && (dueDate - now) < (24 * 60 * 60 * 1000); 
@@ -470,8 +497,10 @@
 
             if(!name || !subject || !date || !time) return alert('Por favor llena todos los campos de la tarea.');
 
-            db.collection("tareas").add({ name, subject, date, time })
-            .then(() => {
+            db.collection("tareas").add({ 
+                userId: currentUser.uid, 
+                name, subject, date, time 
+            }).then(() => {
                 document.getElementById('taskName').value = '';
                 document.getElementById('taskSubject').value = '';
                 document.getElementById('taskDate').value = '';
@@ -481,10 +510,7 @@
         function completeTask(firebaseId) {
             const taskElement = document.getElementById(`task-${firebaseId}`);
             if (taskElement) taskElement.classList.add('completing');
-            
-            setTimeout(() => {
-                db.collection("tareas").doc(firebaseId).delete();
-            }, 300);
+            setTimeout(() => { db.collection("tareas").doc(firebaseId).delete(); }, 300);
         }
 
         function deleteTask(firebaseId) {
@@ -493,16 +519,12 @@
             }
         }
 
-        // --- PASO 3-B: REGISTRO DEL SERVICE WORKER PARA PWA ---
+        // --- REGISTRO DEL SERVICE WORKER ---
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('./sw.js')
-                    .then(registration => {
-                        console.log('App instalable registrada con éxito.', registration.scope);
-                    })
-                    .catch(err => {
-                        console.log('Fallo al registrar la App:', err);
-                    });
+                    .then(r => console.log('PWA registrada.'))
+                    .catch(err => console.log('Fallo PWA:', err));
             });
         }
     </script>
