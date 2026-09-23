@@ -120,9 +120,15 @@
         .card:hover { transform: translateY(-2px); box-shadow: 0 15px 45px rgba(0,0,0,0.4); }
         .card-title { font-size: 1.1rem; font-weight: 700; margin-bottom: 24px; display: flex; align-items: center; gap: 10px; letter-spacing: -0.3px;}
 
+        /* MEJORA EN EL GRID Y RESPONSIVIDAD */
         .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
         .form-grid.full { grid-template-columns: 1fr; }
-        @media (max-width: 480px) { .form-grid { grid-template-columns: 1fr; } }
+        .form-grid.time-grid { grid-template-columns: 1.2fr 1fr 1fr; }
+        
+        /* En celulares, todo se apila verticalmente para no apretar los campos */
+        @media (max-width: 480px) { 
+            .form-grid, .form-grid.time-grid { grid-template-columns: 1fr !important; } 
+        }
 
         .form-group { display: flex; flex-direction: column; gap: 8px; width: 100%; }
         .form-group label { font-size: 0.75rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
@@ -133,7 +139,20 @@
             transition: all 0.3s ease;
         }
         .form-control:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.15); background: rgba(0, 0, 0, 0.4); }
-        select.form-control { cursor: pointer; appearance: none; background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%2394a3b8%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E"); background-repeat: no-repeat; background-position: right 15px top 50%; background-size: 12px auto; }
+        
+        /* SOLUCIÓN AL BUG VISUAL DEL DESPLEGABLE */
+        select.form-control { 
+            cursor: pointer; 
+            appearance: none; 
+            background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%2394a3b8%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E"); 
+            background-repeat: no-repeat; 
+            background-position: right 14px top 50%; 
+            background-size: 12px auto; 
+            padding-right: 40px; /* Evita que el texto choque con la flecha */
+            text-overflow: ellipsis; 
+            overflow: hidden;
+            white-space: nowrap;
+        }
 
         .custom-file-upload {
             display: flex; align-items: center; gap: 10px; padding: 13px 16px;
@@ -243,7 +262,7 @@
                         <i class="fa-solid fa-clipboard-list" style="width: 20px; text-align: center;"></i> Mis Tareas
                     </div>
                     <div class="dropdown-item" id="menu-audio" onclick="cambiarVista('audio')">
-                        <i class="fa-solid fa-microphone-lines" style="width: 20px; text-align: center;"></i> Transcribir clases (IA)
+                        <i class="fa-solid fa-microphone-lines" style="width: 20px; text-align: center;"></i> Clases en Audio (IA)
                     </div>
                     <hr style="border: 0; height: 1px; background: var(--border-light); margin: 4px 0;">
                     <div class="dropdown-item danger" onclick="logout()">
@@ -279,7 +298,8 @@
                     </div>
                 </div>
 
-                <div class="form-grid" style="grid-template-columns: 1.2fr 1fr 1fr;">
+                <!-- AQUÍ SE CORRIGIÓ EL ERROR DE DISEÑO AÑADIENDO LA CLASE time-grid -->
+                <div class="form-grid time-grid">
                     <div class="form-group">
                         <label>Día</label>
                         <select id="classDay" class="form-control">
@@ -363,7 +383,6 @@
                     </label>
                 </div>
                 
-                <!-- CAMPO INTELIGENTE QUE RECUERDA TU LLAVE AUTOMÁTICAMENTE -->
                 <div class="form-group" style="margin-bottom: 16px;">
                     <label>Tu Llave de IA (Solo se pide la primera vez)</label>
                     <input type="password" id="inputApiKey" class="form-control" placeholder="Pega aquí tu clave AIzaSy..." oninput="guardarLlaveLocal(this.value)">
@@ -375,7 +394,7 @@
             </div>
 
             <div class="card" id="resultadoTranscripcionCard" style="display: none;">
-                <div class="card-title" style="color: var(--ai-color);"><i class="fa-solid fa-file-lines"></i> Notas</div>
+                <div class="card-title" style="color: var(--ai-color);"><i class="fa-solid fa-file-lines"></i> Notas Inteligentes</div>
                 <div id="textoResumenIA" style="font-size: 0.95rem; color: var(--text-main); line-height: 1.6; white-space: pre-line;"></div>
             </div>
         </div>
@@ -408,7 +427,6 @@
         let editingClassId = null;
         let editingTaskId = null;
 
-        // Cargar automáticamente la llave guardada en el dispositivo al iniciar
         window.addEventListener('DOMContentLoaded', () => {
             const savedKey = localStorage.getItem('gemini_saved_key');
             if (savedKey) {
@@ -420,7 +438,6 @@
             localStorage.setItem('gemini_saved_key', valor.trim());
         }
 
-        // Lógica del Menú
         function toggleMenu() { document.getElementById('dropdownMenu').classList.toggle('active'); }
         window.onclick = function(event) { if (!event.target.closest('.menu-container')) document.getElementById('dropdownMenu').classList.remove('active'); }
 
@@ -439,7 +456,6 @@
             document.getElementById('vistaActualTexto').textContent = titulos[vista];
         }
 
-        // --- SISTEMA DE AUTENTICACIÓN ---
         auth.onAuthStateChanged((user) => {
             if (user) {
                 currentUser = user;
@@ -460,7 +476,6 @@
         function loginWithGoogle() { auth.signInWithPopup(provider).catch(error => console.error(error)); }
         function logout() { auth.signOut(); }
 
-        // --- UX FORMULARIO ---
         document.getElementById('classImage').addEventListener('change', function(e) {
             document.getElementById('fileNameDisplay').textContent = e.target.files[0] ? e.target.files[0].name : "Adjuntar imagen...";
         });
@@ -579,7 +594,7 @@
 
         function deleteClass(firebaseId) { if(confirm("¿Eliminar clase?")) db.collection("clases").doc(firebaseId).delete(); }
 
-        // --- RENDERIZADO DE TAREAS ACTUALIZADO CON TIEMPO RESTANTE ---
+        // --- SISTEMA DE TAREAS CON CONTADOR DE TIEMPO INTELIGENTE ---
         function renderTasks() {
             const list = document.getElementById('tasksList'); list.innerHTML = '';
             if(tasks.length === 0) { list.innerHTML = `<div class="empty-state"><i class="fa-solid fa-mug-hot" style="font-size: 2rem;"></i><p>No tienes tareas pendientes.</p></div>`; return; }
@@ -594,7 +609,6 @@
                 const urgentClass = isUrgent ? 'urgent' : '';
                 const dateStr = new Date(tsk.date + 'T12:00:00').toLocaleDateString('es-ES', { month: 'short', day: 'numeric' });
                 
-                // LÓGICA DE TIEMPO RESTANTE
                 const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
                 const diffHours = Math.floor((diffMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
                 
@@ -648,9 +662,7 @@
         function deleteTask(firebaseId) { if(confirm("¿Eliminar esta tarea?")) db.collection("tareas").doc(firebaseId).delete(); }
 
 
-        // ==========================================================
-        // 🔥 LÓGICA DE INTELIGENCIA ARTIFICIAL CON REINTENTOS AUTOMÁTICOS
-        // ==========================================================
+        // --- IA CON REINTENTOS AUTOMÁTICOS ---
         async function procesarAudioConIA() {
             const materia = document.getElementById('audioSubject').value;
             const archivoInput = document.getElementById('classAudioFile');
@@ -679,7 +691,6 @@
                     intentos++;
                     textoResultado.innerHTML = `⏳ <b>Intento ${intentos} de ${maxIntentos}:</b> Subiendo archivo y conectando con Gemini...`;
 
-                    // 1. Subir el archivo temporalmente a la API de Google
                     const uploadUrl = `https://generativelanguage.googleapis.com/upload/v1beta/files?key=${GEMINI_API_KEY}`;
                     const uploadRes = await fetch(uploadUrl, {
                         method: 'POST',
@@ -701,7 +712,6 @@
 
                     textoResultado.innerHTML = `⏳ <b>Procesando:</b> Archivo subido con éxito. Generando resumen y buscando tareas...`;
 
-                    // 2. Pedir a Gemini que analice la clase (Usando gemini-3.7-flash)
                     const generateUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.7-flash:generateContent?key=${GEMINI_API_KEY}`;
                     const prompt = `Actúa como el mejor estudiante universitario. Estás escuchando una clase de la materia '${materia}'. Haz un resumen súper detallado con los puntos clave y temas importantes. Al final del resumen, crea una sección que diga 'TAREAS PENDIENTES:' y enlista de forma clara todas las tareas, ensayos o investigaciones que el profesor asignó. Si no dejó tarea, escribe 'No se asignaron tareas en esta sesión'.`;
 
@@ -727,7 +737,6 @@
                     
                     const respuestaIA = generateData.candidates[0].content.parts[0].text;
 
-                    // 3. Mostrar el resultado en pantalla si todo sale bien
                     textoResultado.innerHTML = `<b>Resumen Inteligente de ${materia}</b><br><br>${respuestaIA.replace(/\n/g, '<br>')}`;
                     
                     archivoInput.value = '';
@@ -740,7 +749,7 @@
                         textoResultado.innerHTML = `<span style="color:var(--danger)"><i class="fa-solid fa-triangle-exclamation"></i> Error tras ${maxIntentos} intentos: ${error.message}<br><br><b>Sugerencia:</b> El servidor gratuito está muy saturado. Intenta con un archivo más corto o espera unos minutos.</span>`;
                     } else {
                         textoResultado.innerHTML = `⚠️ Servidor saturado (Alta demanda). Reintentando automáticamente en 5 segundos... (Intento ${intentos}/${maxIntentos})`;
-                        await new Promise(resolve => setTimeout(resolve, 5000)); // Espera 5 segundos antes del siguiente intento
+                        await new Promise(resolve => setTimeout(resolve, 5000));
                     }
                 }
             }
@@ -749,7 +758,6 @@
             btn.innerHTML = `<i class="fa-solid fa-wand-magic-sparkles"></i> Analizar Clase con Gemini`;
         }
 
-        // --- REGISTRO DEL SERVICE WORKER ---
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => { navigator.serviceWorker.register('./sw.js').catch(err => console.log('Fallo PWA:', err)); });
         }
