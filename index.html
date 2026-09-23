@@ -350,7 +350,7 @@
             </div>
         </div>
 
-        <!-- =================== SECCIÓN DE AUDIO / TRANSCRIPCIÓN (IA) =================== -->
+        <!-- =================== SECCIÓN DE AUDIO / TRANSCRIPCIÓN (GROQ IA) =================== -->
         <div id="vista-audio" style="display: none;">
             <div class="card">
                 <div class="card-title" style="color: var(--ai-color);"><i class="fa-solid fa-microphone-lines"></i> Resumen de Clase por IA</div>
@@ -361,7 +361,7 @@
                 </div>
 
                 <div class="form-group" style="margin-bottom: 16px;">
-                    <label>Archivo de audio o video (MP3, MP4, WAV...)</label>
+                    <label>Archivo de audio o video (Máx 25 MB)</label>
                     <label class="custom-file-upload" style="border-style: solid; justify-content: center;">
                         <i class="fa-solid fa-cloud-arrow-up" style="font-size: 1.2rem;"></i>
                         <span id="audioFileName">Buscar archivo de clase...</span>
@@ -369,13 +369,14 @@
                     </label>
                 </div>
                 
+                <!-- LLAVE PRE-CARGADA DE GROQ -->
                 <div class="form-group" style="margin-bottom: 16px;">
-                    <label>Tu Llave de IA (Solo se pide la primera vez)</label>
-                    <input type="password" id="inputApiKey" class="form-control" placeholder="Pega aquí tu clave AIzaSy..." oninput="guardarLlaveLocal(this.value)">
+                    <label>Tu Llave de IA (Groq API Key)</label>
+                    <input type="password" id="inputApiKey" class="form-control" value="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" placeholder="Pega aquí tu clave gsk_..." oninput="guardarLlaveLocal(this.value)">
                 </div>
 
                 <button id="btnProcesarIA" onclick="procesarAudioConIA()" class="btn-primary btn-ai">
-                    <i class="fa-solid fa-wand-magic-sparkles"></i> Analizar Clase con Gemini
+                    <i class="fa-solid fa-wand-magic-sparkles"></i> Analizar Clase con Groq IA
                 </button>
             </div>
 
@@ -414,14 +415,17 @@
         let editingTaskId = null;
 
         window.addEventListener('DOMContentLoaded', () => {
-            const savedKey = localStorage.getItem('gemini_saved_key');
+            const savedKey = localStorage.getItem('groq_saved_key');
             if (savedKey) {
                 document.getElementById('inputApiKey').value = savedKey;
+            } else {
+                // Guarda la que dejamos por defecto para futuros accesos
+                guardarLlaveLocal(document.getElementById('inputApiKey').value);
             }
         });
 
         function guardarLlaveLocal(valor) {
-            localStorage.setItem('gemini_saved_key', valor.trim());
+            localStorage.setItem('groq_saved_key', valor.trim());
         }
 
         function toggleMenu() { document.getElementById('dropdownMenu').classList.toggle('active'); }
@@ -649,18 +653,23 @@
 
 
         // ==========================================================
-        // 🔥 IA CON ARREGLO DE MODELOS DE RESPALDO (FALLBACK ARRAY)
+        // 🔥 LÓGICA ULTRA RÁPIDA CON GROQ IA (WHISPER + LLAMA 3)
         // ==========================================================
         async function procesarAudioConIA() {
             const materia = document.getElementById('audioSubject').value;
             const archivoInput = document.getElementById('classAudioFile');
             const archivo = archivoInput.files[0];
             
-            const GEMINI_API_KEY = document.getElementById('inputApiKey').value.trim();
+            const GROQ_API_KEY = document.getElementById('inputApiKey').value.trim();
 
             if(!materia) return alert('Por favor selecciona una materia primero.');
-            if(!archivo) return alert('Por favor selecciona un archivo de audio o video para que la IA lo escuche.');
-            if(!GEMINI_API_KEY) return alert('Por favor pega tu API Key de Gemini en el recuadro.');
+            if(!archivo) return alert('Por favor selecciona un archivo de audio o video para la IA.');
+            if(!GROQ_API_KEY) return alert('La API Key de Groq no se encuentra.');
+
+            // Groq tiene un límite estricto de 25MB para archivos de audio
+            if (archivo.size > 25 * 1024 * 1024) {
+                return alert('El archivo pesa más de 25 MB. Por favor, recórtalo o comprímelo antes de subirlo.');
+            }
 
             const tarjetaResultado = document.getElementById('resultadoTranscripcionCard');
             const textoResultado = document.getElementById('textoResumenIA');
@@ -670,98 +679,75 @@
             btn.disabled = true;
             window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
 
-            // Lista oficial de modelos de Gemini (del más potente al más básico)
-            const modelosDeRespaldo = [
-                "gemini-3.7-flash",
-                "gemini-3.6-flash",
-                "gemini-3.5-flash",
-                "gemini-2.5-flash",
-                "gemini-2.0-flash",
-                "gemini-1.5-flash"
-            ];
-
-            let exito = false;
-            let respuestaIA = "";
-
-            textoResultado.innerHTML = `⏳ <b>Subiendo archivo:</b> Conectando con los servidores de Google...`;
-
             try {
-                // 1. Subir el archivo temporalmente a la API de Google (Solo se hace 1 vez)
-                const uploadUrl = `https://generativelanguage.googleapis.com/upload/v1beta/files?key=${GEMINI_API_KEY}`;
-                const uploadRes = await fetch(uploadUrl, {
+                // PASO 1: Transcribir el audio usando Whisper-Large-v3-Turbo en Groq
+                textoResultado.innerHTML = `⏳ <b>Paso 1/2:</b> Transcribiendo audio de la clase velozmente...`;
+                
+                const formData = new FormData();
+                formData.append("file", archivo);
+                formData.append("model", "whisper-large-v3-turbo");
+                formData.append("response_format", "json");
+                formData.append("language", "es"); // Ayuda a mejorar la precisión en español
+
+                const transcripcionRes = await fetch("https://api.groq.com/openai/v1/audio/transcriptions", {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${GROQ_API_KEY}` },
+                    body: formData
+                });
+
+                const transcripcionData = await transcripcionRes.json();
+                
+                if (!transcripcionRes.ok || transcripcionData.error) {
+                    throw new Error(transcripcionData.error?.message || "Error al intentar transcribir el archivo de audio.");
+                }
+
+                const textoTranscrito = transcripcionData.text;
+
+                if (!textoTranscrito || textoTranscrito.trim() === "") {
+                    throw new Error("La Inteligencia Artificial no logró detectar ninguna voz humana en este archivo.");
+                }
+
+                // PASO 2: Mandar el texto transcrito a Llama 3 para hacer el súper resumen
+                textoResultado.innerHTML = `⏳ <b>Paso 2/2:</b> ¡Audio capturado! Ahora Llama 3 está armando el resumen y sacando las tareas...`;
+
+                const promptInteligente = `Actúa como el mejor estudiante universitario. Lee esta transcripción de una clase de '${materia}'. Haz un resumen súper detallado con los puntos clave y temas importantes. Al final del resumen, crea una sección que diga 'TAREAS PENDIENTES:' y enlista de forma clara todas las tareas, ensayos o investigaciones que el profesor asignó. Si no dejó tarea, escribe 'No se asignaron tareas en esta sesión'.
+
+Transcripción de la clase:
+"${textoTranscrito}"`;
+
+                const chatRes = await fetch("https://api.groq.com/openai/v1/chat/completions", {
                     method: 'POST',
                     headers: {
-                        'X-Goog-Upload-Command': 'start, upload, finalize',
-                        'X-Goog-Upload-Header-Content-Length': archivo.size.toString(),
-                        'X-Goog-Upload-Header-Content-Type': archivo.type,
-                        'Content-Type': archivo.type
+                        'Authorization': `Bearer ${GROQ_API_KEY}`,
+                        'Content-Type': 'application/json'
                     },
-                    body: archivo
+                    body: JSON.stringify({
+                        model: "llama-3.3-70b-versatile",
+                        messages: [{ role: "user", content: promptInteligente }]
+                    })
                 });
+
+                const chatData = await chatRes.json();
+
+                if (!chatRes.ok || chatData.error) {
+                    throw new Error(chatData.error?.message || "Error al procesar el resumen de texto.");
+                }
+
+                const respuestaFinal = chatData.choices[0].message.content;
+
+                // Mostrar el resultado final en pantalla
+                textoResultado.innerHTML = `<b>Resumen Inteligente de ${materia}</b><br><br>${respuestaFinal.replace(/\n/g, '<br>')}`;
                 
-                const uploadData = await uploadRes.json();
-                if(!uploadData.file || !uploadData.file.uri) {
-                    throw new Error("La IA no pudo recibir el archivo. Revisa que tu API Key sea correcta.");
-                }
-                const fileUri = uploadData.file.uri;
-
-                // 2. Bucle de modelos: Si uno falla, salta automáticamente al siguiente
-                for (let i = 0; i < modelosDeRespaldo.length; i++) {
-                    let modeloActual = modelosDeRespaldo[i];
-                    textoResultado.innerHTML = `⏳ <b>Procesando:</b> Intentando con el modelo inteligente <b>${modeloActual}</b>... (Intento ${i + 1}/${modelosDeRespaldo.length})`;
-
-                    try {
-                        const generateUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modeloActual}:generateContent?key=${GEMINI_API_KEY}`;
-                        const prompt = `Actúa como el mejor estudiante universitario. Estás escuchando una clase de la materia '${materia}'. Haz un resumen súper detallado con los puntos clave y temas importantes. Al final del resumen, crea una sección que diga 'TAREAS PENDIENTES:' y enlista de forma clara todas las tareas, ensayos o investigaciones que el profesor asignó. Si no dejó tarea, escribe 'No se asignaron tareas en esta sesión'.`;
-
-                        const generateRes = await fetch(generateUrl, {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({
-                                contents: [{
-                                    role: 'user',
-                                    parts: [
-                                        { fileData: { fileUri: fileUri, mimeType: archivo.type } },
-                                        { text: prompt }
-                                    ]
-                                }]
-                            })
-                        });
-
-                        const generateData = await generateRes.json();
-                        
-                        if (generateData.error) {
-                            throw new Error(generateData.error.message);
-                        }
-                        
-                        respuestaIA = generateData.candidates[0].content.parts[0].text;
-                        exito = true;
-                        break; // Si llega aquí, el modelo funcionó y rompemos el bucle
-
-                    } catch (error) {
-                        console.warn(`Modelo ${modeloActual} ocupado o no disponible:`, error.message);
-                        if (i === modelosDeRespaldo.length - 1) {
-                            throw new Error("Todos los modelos gratuitos están saturados en este instante. " + error.message);
-                        }
-                        // Si falla, esperamos 2 segundos antes de intentar con el siguiente modelo de la lista
-                        await new Promise(resolve => setTimeout(resolve, 2000));
-                    }
-                }
-
-                // 3. Mostrar el resultado final
-                if (exito) {
-                    textoResultado.innerHTML = `<b>Resumen Inteligente de ${materia}</b><br><br>${respuestaIA.replace(/\n/g, '<br>')}`;
-                    archivoInput.value = '';
-                    document.getElementById('audioFileName').textContent = 'Buscar archivo de clase...';
-                }
+                archivoInput.value = '';
+                document.getElementById('audioFileName').textContent = 'Buscar archivo de clase...';
 
             } catch (error) {
-                console.error("Error General:", error);
-                textoResultado.innerHTML = `<span style="color:var(--danger)"><i class="fa-solid fa-triangle-exclamation"></i> Error: ${error.message}<br><br><b>Sugerencia:</b> Si el problema persiste, intenta de nuevo en un par de minutos.</span>`;
+                console.error("Error en Groq API:", error);
+                textoResultado.innerHTML = `<span style="color:var(--danger)"><i class="fa-solid fa-triangle-exclamation"></i> Error: ${error.message}</span>`;
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = `<i class="fa-solid fa-wand-magic-sparkles"></i> Analizar otra clase con Groq IA`;
             }
-
-            btn.disabled = false;
-            btn.innerHTML = `<i class="fa-solid fa-wand-magic-sparkles"></i> Analizar Clase con Gemini`;
         }
 
         // --- REGISTRO DEL SERVICE WORKER ---
