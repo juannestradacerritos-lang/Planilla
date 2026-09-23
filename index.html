@@ -322,7 +322,7 @@
             }
         });
         
-        function loginWithGoogle() { auth.signInWithPopup(provider); }
+        function loginWithGoogle() { auth.signInWithRedirect(provider); }
         function logout() { auth.signOut(); }
 
         // --- UX FORMULARIO ---
