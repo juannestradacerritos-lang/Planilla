@@ -155,6 +155,7 @@
     </style>
 </head>
 <body>
+    <!-- PANTALLA DE INICIO DE SESIÓN -->
     <div id="login-view">
         <i class="fa-solid fa-graduation-cap" style="font-size: 4rem; color: #3b82f6;"></i>
         <h1>Panel de clases y tareas</h1>
@@ -164,7 +165,9 @@
         </button>
     </div>
     
+    <!-- PANEL PRINCIPAL -->
     <div class="dashboard-wrapper" id="dashboard-view">
+        <!-- Cabecera Personalizada -->
         <div class="header">
             <div class="profile-section">
                 <div class="avatar" id="profileAvatar"></div>
@@ -176,6 +179,7 @@
             <button class="btn-logout" onclick="logout()"><i class="fa-solid fa-arrow-right-from-bracket"></i> Salir</button>
         </div>
 
+        <!-- Formulario de Clases -->
         <div class="card">
             <div class="card-title" style="color: #38bdf8;"><i class="fa-solid fa-bolt"></i> Nueva Clase</div>
             <div class="form-row">
@@ -222,11 +226,13 @@
             </button>
         </div>
 
+        <!-- Lista de Clases -->
         <div class="card">
             <div class="card-title" style="color: #f8fafc;"><i class="fa-solid fa-list-check" style="color: #38bdf8;"></i> Agenda de la Semana</div>
             <div id="classesList"><p style="text-align:center; color:#94a3b8; font-size: 0.9rem; margin-top: 10px;">Sincronizando con la nube...</p></div>
         </div>
 
+        <!-- Gestor de Tareas -->
         <div class="card">
             <div class="card-title" style="color: #a78bfa;"><i class="fa-solid fa-clipboard-list"></i> Gestor de Tareas</div>
             <div class="form-row">
@@ -258,6 +264,7 @@
         </div>
     </div>
 
+    <!-- SDK DE FIREBASE -->
     <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore-compat.js"></script>
@@ -282,11 +289,6 @@
         let unsubscribeClasses = null;
         let unsubscribeTasks = null;
 
-        // Capturar resultado del redirect al volver de Google de forma limpia
-        auth.getRedirectResult().catch((error) => {
-            console.error("Error en redirect:", error);
-        });
-
         // --- SISTEMA DE AUTENTICACIÓN ---
         auth.onAuthStateChanged((user) => {
             if (user) {
@@ -308,8 +310,11 @@
             }
         });
         
+        // REGRESAMOS A POPUP: Evita el bloqueo "storage-partitioned" de Android
         function loginWithGoogle() { 
-            auth.signInWithRedirect(provider); 
+            auth.signInWithPopup(provider).catch(function(error) {
+                console.error("Error al iniciar sesión:", error);
+            });
         }
         
         function logout() { auth.signOut(); }
