@@ -26,6 +26,7 @@
             --success: #10b981;
             --danger: #ef4444;
             --warning: #f59e0b;
+            --ai-color: #06b6d4;
             --gradient-text: linear-gradient(135deg, #38bdf8, #818cf8);
             --gradient-bg: radial-gradient(circle at top right, #1e293b, var(--bg-dark));
         }
@@ -98,7 +99,7 @@
             position: absolute; top: 55px; right: 0; background: rgba(15, 23, 42, 0.95);
             backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
             border: 1px solid var(--border-light); border-radius: 16px; padding: 8px;
-            width: 200px; display: none; flex-direction: column; gap: 4px;
+            width: 220px; display: none; flex-direction: column; gap: 4px;
             box-shadow: 0 20px 40px rgba(0,0,0,0.5); z-index: 100;
         }
         .dropdown-menu.active { display: flex; animation: dropIn 0.2s cubic-bezier(0.16, 1, 0.3, 1); }
@@ -112,13 +113,13 @@
         .dropdown-item.active-item { background: rgba(59, 130, 246, 0.1); color: var(--primary); font-weight: 600;}
         .dropdown-item.danger:hover { background: rgba(239, 68, 68, 0.1); color: var(--danger); }
         
-        /* TARJETAS PREMIUM CON SEPARACIÓN AÑADIDA */
+        /* TARJETAS PREMIUM */
         .card {
             background: var(--card-bg); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
             border: 1px solid var(--border-light); border-radius: 20px; padding: 24px;
             box-shadow: 0 10px 40px rgba(0,0,0,0.3); width: 100%; 
             transition: transform 0.3s ease, box-shadow 0.3s ease;
-            margin-bottom: 25px; /* ¡AQUÍ ESTÁ LA SEPARACIÓN! */
+            margin-bottom: 25px;
         }
         .card:hover { transform: translateY(-2px); box-shadow: 0 15px 45px rgba(0,0,0,0.4); }
         .card-title { font-size: 1.1rem; font-weight: 700; margin-bottom: 24px; display: flex; align-items: center; gap: 10px; letter-spacing: -0.3px;}
@@ -126,7 +127,7 @@
         /* FORMULARIOS ESTILO GRID PROFESIONAL */
         .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
         .form-grid.full { grid-template-columns: 1fr; }
-        @media (max-width: 480px) { .form-grid { grid-template-columns: 1fr; } } /* En celulares se apilan */
+        @media (max-width: 480px) { .form-grid { grid-template-columns: 1fr; } }
 
         .form-group { display: flex; flex-direction: column; gap: 8px; width: 100%; }
         .form-group label { font-size: 0.75rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
@@ -211,7 +212,6 @@
     </style>
 </head>
 <body>
-    <!-- PANTALLA DE INICIO DE SESIÓN -->
     <div id="login-view">
         <i class="fa-solid fa-graduation-cap" style="font-size: 4.5rem; color: #3b82f6; filter: drop-shadow(0 0 20px rgba(59,130,246,0.4));"></i>
         <h1>Panel Universitario</h1>
@@ -221,10 +221,8 @@
         </button>
     </div>
     
-    <!-- PANEL PRINCIPAL -->
     <div class="dashboard-wrapper" id="dashboard-view">
         
-        <!-- CABECERA NATIVA -->
         <div class="header">
             <div class="profile-section">
                 <div class="avatar" id="profileAvatar"></div>
@@ -245,6 +243,9 @@
                     <div class="dropdown-item" id="menu-tareas" onclick="cambiarVista('tareas')">
                         <i class="fa-solid fa-clipboard-list" style="width: 20px; text-align: center;"></i> Mis Tareas
                     </div>
+                    <div class="dropdown-item" id="menu-audio" onclick="cambiarVista('audio')">
+                        <i class="fa-solid fa-microphone-lines" style="width: 20px; text-align: center;"></i> Clases en Audio (IA)
+                    </div>
                     <hr style="border: 0; height: 1px; background: var(--border-light); margin: 4px 0;">
                     <div class="dropdown-item danger" onclick="logout()">
                         <i class="fa-solid fa-arrow-right-from-bracket" style="width: 20px; text-align: center;"></i> Cerrar sesión
@@ -253,7 +254,6 @@
             </div>
         </div>
 
-        <!-- =================== SECCIÓN DE CLASES =================== -->
         <div id="vista-clases">
             <div class="card">
                 <div class="card-title" style="color: #38bdf8;"><i class="fa-solid fa-bolt"></i> Programar Materia</div>
@@ -314,7 +314,6 @@
             </div>
         </div>
 
-        <!-- =================== SECCIÓN DE TAREAS =================== -->
         <div id="vista-tareas" style="display: none;">
             <div class="card">
                 <div class="card-title" style="color: #a78bfa;"><i class="fa-solid fa-list-check"></i> Nueva Tarea</div>
@@ -348,16 +347,46 @@
                 </button>
             </div>
             
-            <!-- Contenedor separado para la lista de tareas -->
             <div class="card">
                 <div class="card-title" style="color: #f8fafc;"><i class="fa-solid fa-inbox" style="color: #a78bfa;"></i> Bandeja de Pendientes</div>
                 <div id="tasksList"></div>
             </div>
         </div>
 
+        <div id="vista-audio" style="display: none;">
+            <div class="card">
+                <div class="card-title" style="color: var(--ai-color);"><i class="fa-solid fa-microphone-lines"></i> Resumen de Clase por IA</div>
+                
+                <div class="form-group" style="margin-bottom: 16px;">
+                    <label>Selecciona la materia</label>
+                    <select id="audioSubject" class="form-control">
+                        <option value="" disabled selected>Asociar a una materia...</option>
+                    </select>
+                </div>
+
+                <div class="form-group" style="margin-bottom: 16px;">
+                    <label>Archivo de audio (MP3, M4A, WAV)</label>
+                    <label class="custom-file-upload" style="border-style: solid; justify-content: center;">
+                        <i class="fa-solid fa-cloud-arrow-up" style="font-size: 1.2rem;"></i>
+                        <span id="audioFileName">Buscar archivo de audio...</span>
+                        <input type="file" id="classAudioFile" accept="audio/*" onchange="actualizarNombreAudio(this)">
+                    </label>
+                </div>
+
+                <button onclick="procesarAudioConIA()" class="btn-primary" style="background: linear-gradient(135deg, var(--ai-color), #3b82f6); box-shadow: 0 8px 20px rgba(6, 182, 212, 0.3);">
+                    <i class="fa-solid fa-wand-magic-sparkles"></i> Transcribir y Extraer Tareas con IA
+                </button>
+            </div>
+
+            <div class="card" id="resultadoTranscripcionCard" style="display: none;">
+                <div class="card-title" style="color: var(--ai-color);"><i class="fa-solid fa-file-lines"></i> Notas Inteligentes</div>
+                <div id="textoResumenIA" style="font-size: 0.95rem; color: var(--text-main); line-height: 1.6; white-space: pre-line;">
+                    </div>
+            </div>
+        </div>
+
     </div>
 
-    <!-- SDK DE FIREBASE -->
     <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore-compat.js"></script>
@@ -401,31 +430,19 @@
             // Actualizar clases CSS del menú
             document.getElementById('menu-clases').classList.remove('active-item');
             document.getElementById('menu-tareas').classList.remove('active-item');
+            document.getElementById('menu-audio').classList.remove('active-item');
             document.getElementById(`menu-${vista}`).classList.add('active-item');
 
-            if (vista === 'clases') {
-                document.getElementById('vista-clases').style.display = 'block';
-                document.getElementById('vista-tareas').style.display = 'none';
-                document.getElementById('vistaActualTexto').textContent = 'Agenda de Clases';
-            } else if (vista === 'tareas') {
-                document.getElementById('vista-clases').style.display = 'none';
-                document.getElementById('vista-tareas').style.display = 'block';
-                document.getElementById('vistaActualTexto').textContent = 'Mis Tareas';
-            }
+            document.getElementById('vista-clases').style.display = (vista === 'clases') ? 'block' : 'none';
+            document.getElementById('vista-tareas').style.display = (vista === 'tareas') ? 'block' : 'none';
+            document.getElementById('vista-audio').style.display = (vista === 'audio') ? 'block' : 'none';
+
+            const titulos = { 'clases': 'Agenda de Clases', 'tareas': 'Mis Tareas', 'audio': 'Transcripción IA' };
+            document.getElementById('vistaActualTexto').textContent = titulos[vista];
         }
 
-        // --- SISTEMA DE AUTENTICACIÓN ---
+        // --- SISTEMA DE AUTENTICACIÓN (REAL RESTAURADO) ---
         auth.onAuthStateChanged((user) => {
-            
-            // 🛑 TRUCO TEMPORAL PARA VER EL DISEÑO SIN LOGUEARTE 🛑
-            // (Para que vuelva a funcionar real, borra desde aquí...)
-            user = {
-                uid: "usuario-de-prueba",
-                displayName: "Juan David (Vista Previa)",
-                photoURL: "https://upload.wikimedia.org/wikipedia/commons/7/7c/Profile_avatar_placeholder_large.png"
-            };
-            // (...hasta aquí)
-
             if (user) {
                 currentUser = user;
                 document.getElementById('login-view').style.display = 'none';
@@ -456,6 +473,11 @@
             document.getElementById('fileNameDisplay').textContent = fileName;
         });
 
+        function actualizarNombreAudio(input) {
+            const fileName = input.files[0] ? input.files[0].name : "Buscar archivo de audio...";
+            document.getElementById('audioFileName').textContent = fileName;
+        }
+
         const daysMapStr = { "1": "Lunes", "2": "Martes", "3": "Miércoles", "4": "Jueves", "5": "Viernes", "6": "Sábado", "7": "Domingo" };
         let classes = [];
         let tasks = [];
@@ -480,7 +502,7 @@
         function renderClasses() {
             const list = document.getElementById('classesList');
             list.innerHTML = '';
-            updateSubjectDropdown(); 
+            updateSubjectDropdowns(); 
 
             if(classes.length === 0) {
                 list.innerHTML = `
@@ -518,14 +540,23 @@
             });
         }
 
-        function updateSubjectDropdown() {
-            const select = document.getElementById('taskSubject');
-            select.innerHTML = '';
+        function updateSubjectDropdowns() {
+            const selectTask = document.getElementById('taskSubject');
+            const selectAudio = document.getElementById('audioSubject');
+            
+            selectTask.innerHTML = '';
+            selectAudio.innerHTML = '';
+
             if(classes.length === 0) {
-                select.innerHTML = '<option value="" disabled selected>Registra una clase primero...</option>';
+                selectTask.innerHTML = '<option value="" disabled selected>Registra una clase primero...</option>';
+                selectAudio.innerHTML = '<option value="" disabled selected>Registra una clase primero...</option>';
             } else {
-                select.innerHTML = '<option value="" disabled selected>Selecciona tu asignatura...</option>';
-                classes.forEach(cls => { select.innerHTML += `<option value="${cls.name}">${cls.name}</option>`; });
+                selectTask.innerHTML = '<option value="" disabled selected>Selecciona tu asignatura...</option>';
+                selectAudio.innerHTML = '<option value="" disabled selected>Selecciona tu asignatura...</option>';
+                classes.forEach(cls => { 
+                    selectTask.innerHTML += `<option value="${cls.name}">${cls.name}</option>`; 
+                    selectAudio.innerHTML += `<option value="${cls.name}">${cls.name}</option>`; 
+                });
             }
         }
 
@@ -710,6 +741,19 @@
 
         function deleteTask(firebaseId) {
             if(confirm("¿Eliminar esta tarea de tus pendientes?")) db.collection("tareas").doc(firebaseId).delete();
+        }
+
+        // --- FUNCIÓN PLACEHOLDER PARA LA IA ---
+        function procesarAudioConIA() {
+            const materia = document.getElementById('audioSubject').value;
+            const archivo = document.getElementById('classAudioFile').files[0];
+
+            if(!materia) return alert('Por favor selecciona una materia.');
+            if(!archivo) return alert('Por favor selecciona un archivo de audio.');
+
+            document.getElementById('resultadoTranscripcionCard').style.display = 'block';
+            document.getElementById('textoResumenIA').innerHTML = `⏳ Analizando audio y procesando transcripción para <b>${materia}</b>...<br><small style="color:var(--text-muted)">Aquí se mostrarán los puntos clave y tareas detectadas próximamente.</small>`;
+            window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
         }
 
         // --- REGISTRO DEL SERVICE WORKER ---
