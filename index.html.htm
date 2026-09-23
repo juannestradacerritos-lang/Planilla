@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mis Clases y Tareas</title>
+    
+    <!-- PASO 3-A: Vinculación del Manifiesto y color de tema para la PWA -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#3b82f6">
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        :root {
+            color-scheme: dark; 
+            --bg-dark: #050505;
+            --card-bg: rgba(23, 23, 23, 0.7);
+            --border-color: rgba(255, 255, 255, 0.1);
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --primary: #3b82f6;
+            --primary-hover: #2563eb;
+            --secondary: #8b5cf6;
+            --secondary-hover: #7c3aed;
+            --success: #10b981;
+            --danger: #ef4444;
+            --gradient-text: linear-gradient(135deg, #38bdf8, #818cf8);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+
+        body { 
+            background: radial-gradient(circle at top right, #1e293b, var(--bg-dark)); 
+            color: var(--text-main); 
+            min-height: 100vh; 
+            display: flex; 
+            justify-content: center; 
+            padding: 30px 15px; 
+            overflow-x: hidden;
+        }
+
+        .dashboard-wrapper {
+            width: 100%;
+            max-width: 550px;
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+        }
+
+        .header { display: flex; align-items: center; gap: 15px; margin-bottom: 5px; }
+
+        .avatar {
+            width: 55px;
+            height: 55px;
+            background: var(--gradient-text);
+            border-radius: 14px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.2rem; font-weight: 700; color: #fff;
+            box-shadow: 0 8px 16px rgba(56, 189, 248, 0.2);
+            cursor: pointer; overflow: hidden; position: relative; transition: 0.3s;
+        }
+        .avatar img { width: 100%; height: 100%; object-fit: cover; }
+        .avatar:hover::after {
+            content: '\f030'; font-family: 'Font Awesome 6 Free'; font-weight: 900;
+            position: absolute; background: rgba(0,0,0,0.6); width: 100%; height: 100%;
+            display: flex; align-items: center; justify-content: center; font-size: 1.2rem;
+        }
+        .header-text h1 {
+            font-size: 1.5rem; font-weight: 700; background: var(--gradient-text);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        }
+
+        .card {
+            background: var(--card-bg); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--border-color); border-radius: 16px; padding: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5); width: 100%;
+        }
+        .card-title { font-size: 1.1rem; font-weight: 600; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; }
+
+        .form-row { display: flex; gap: 15px; margin-bottom: 15px; width: 100%; }
+        .form-row > div { flex: 1; min-width: 0; } 
+        .form-group { display: flex; flex-direction: column; gap: 6px; margin-bottom: 15px; width: 100%; }
+        .form-group label { font-size: 0.85rem; color: var(--text-muted); font-weight: 500; }
+        
+        .form-control {
+            width: 100%; background: rgba(0, 0, 0, 0.3); border: 1px solid var(--border-color);
+            padding: 12px 15px; border-radius: 10px; color: #fff; font-size: 0.95rem; transition: all 0.3s ease;
+        }
+        .form-control:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.25); background: rgba(0, 0, 0, 0.5); }
+        select.form-control { cursor: pointer; text-overflow: ellipsis; white-space: nowrap; overflow: hidden; }
+
+        .custom-file-upload {
+            display: flex; align-items: center; gap: 10px; padding: 11px 15px;
+            background: rgba(0, 0, 0, 0.3); border: 1px dashed var(--border-color);
+            border-radius: 10px; color: var(--text-muted); cursor: pointer; transition: all 0.3s;
+            font-size: 0.9rem; overflow: hidden; white-space: nowrap;
+        }
+        .custom-file-upload:hover { border-color: var(--primary); color: #fff; }
+        .custom-file-upload input[type="file"] { display: none; }
+        .custom-file-upload i { color: var(--primary); font-size: 1.1rem; }
+
+        .btn-primary {
+            background: linear-gradient(to right, var(--primary), var(--primary-hover)); color: white;
+            border: none; padding: 14px; border-radius: 10px; font-weight: 600; font-size: 1rem;
+            cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; width: 100%;
+            display: flex; justify-content: center; align-items: center; gap: 10px;
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4); margin-top: 10px;
+        }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(59, 130, 246, 0.6); }
+        .btn-secondary { background: linear-gradient(to right, var(--secondary), var(--secondary-hover)); box-shadow: 0 4px 15px rgba(139, 92, 246, 0.4); }
+        .btn-secondary:hover { box-shadow: 0 6px 20px rgba(139, 92, 246, 0.6); }
+
+        .list-item {
+            background: rgba(0, 0, 0, 0.4); border: 1px solid var(--border-color); padding: 12px 15px;
+            border-radius: 12px; margin-bottom: 12px; display: flex; justify-content: space-between;
+            align-items: center; transition: all 0.3s ease; gap: 15px;
+        }
+        .list-item:hover { transform: scale(1.01); border-color: rgba(255, 255, 255, 0.2); }
+        
+        .task-item { border-left: 4px solid var(--primary); }
+        .task-item.urgent { border-left-color: var(--danger); }
+        .task-item.completing { transform: scale(0.9); opacity: 0; background: rgba(16, 185, 129, 0.2); border-color: var(--success); }
+        .task-tag { font-size: 0.7rem; background: rgba(255,255,255,0.1); padding: 3px 8px; border-radius: 6px; margin-left: 8px; font-weight: normal; color: #cbd5e1; display: inline-block; }
+
+        .item-img-box {
+            width: 45px; height: 45px; border-radius: 10px; background: #1e293b;
+            display: flex; align-items: center; justify-content: center; overflow: hidden;
+            flex-shrink: 0; color: #475569; font-size: 1.2rem; border: 1px solid #334155;
+        }
+        .item-img-box img { width: 100%; height: 100%; object-fit: cover; }
+        .item-info { flex-grow: 1; min-width: 0; }
+        .item-info h3 { font-size: 1.05rem; font-weight: 600; margin-bottom: 4px; display: flex; align-items: center; flex-wrap: wrap; gap: 5px;}
+        .item-info p { font-size: 0.8rem; color: var(--text-muted); display: flex; align-items: center; gap: 5px;}
+        .actions { display: flex; gap: 8px; flex-shrink: 0; }
+        
+        .btn-icon {
+            background: rgba(255, 255, 255, 0.05); border: 1px solid var(--border-color); color: #fff;
+            width: 36px; height: 36px; border-radius: 8px; display: flex; align-items: center; justify-content: center;
+            cursor: pointer; transition: all 0.2s; text-decoration: none;
+        }
+        .btn-icon.play { color: var(--primary); }
+        .btn-icon.play:hover { background: rgba(59, 130, 246, 0.2); border-color: var(--primary); }
+        .btn-icon.success { color: var(--success); }
+        .btn-icon.success:hover { background: rgba(16, 185, 129, 0.2); border-color: var(--success); }
+        .btn-icon.delete { color: var(--danger); }
+        .btn-icon.delete:hover { background: rgba(239, 68, 68, 0.2); border-color: var(--danger); }
+
+        @media (max-width: 480px) { .form-row { flex-direction: column; gap: 0; } }
+    </style>
+</head>
+<body>
+
+    <div class="dashboard-wrapper">
+        <!-- Cabecera -->
+        <div class="header">
+            <input type="file" id="profileUpload" accept="image/*" style="display: none;">
+            <div class="avatar" id="profileAvatar" onclick="document.getElementById('profileUpload').click()" title="Cambiar foto de perfil">
+                JD
+            </div>
+            <div class="header-text">
+                <h1>Panel de clases y tareas</h1>
+            </div>
+        </div>
+
+        <!-- Formulario de Clases -->
+        <div class="card">
+            <div class="card-title" style="color: #38bdf8;"><i class="fa-solid fa-bolt"></i> Nueva Clase</div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Nombre de la materia</label>
+                    <input type="text" id="className" class="form-control" placeholder="Ej. Contabilidad I">
+                </div>
+                <div class="form-group">
+                    <label>Imagen (Opcional)</label>
+                    <label class="custom-file-upload">
+                        <input type="file" id="classImage" accept="image/*">
+                        <i class="fa-solid fa-cloud-arrow-up"></i><span id="fileNameDisplay">Subir portada...</span>
+                    </label>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Enlace de la reunión</label>
+                <input type="url" id="classLink" class="form-control" placeholder="https://zoom.us/...">
+            </div>
+            <div class="form-row">
+                <div class="form-group" style="flex: 1.2;">
+                    <label>Día</label>
+                    <select id="classDay" class="form-control">
+                        <option value="1">Lunes</option><option value="2">Martes</option>
+                        <option value="3">Miércoles</option><option value="4">Jueves</option>
+                        <option value="5">Viernes</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Hora Inicio</label>
+                    <input type="time" id="classTime" class="form-control" value="17:30">
+                </div>
+                <div class="form-group">
+                    <label>Hora Fin</label>
+                    <input type="time" id="classEndTime" class="form-control" value="20:30">
+                </div>
+            </div>
+            <button onclick="processNewClass()" class="btn-primary">
+                <i class="fa-regular fa-bell"></i> Programar Alarma y Guardar
+            </button>
+        </div>
+
+        <!-- Lista de Clases -->
+        <div class="card">
+            <div class="card-title" style="color: #f8fafc;"><i class="fa-solid fa-list-check" style="color: #38bdf8;"></i> Agenda de la Semana</div>
+            <div id="classesList"><p style="text-align:center; color:#94a3b8; font-size: 0.9rem; margin-top: 10px;">Cargando clases desde la nube...</p></div>
+        </div>
+
+        <!-- Gestor de Tareas -->
+        <div class="card">
+            <div class="card-title" style="color: #a78bfa;"><i class="fa-solid fa-clipboard-list"></i> Gestor de Tareas</div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Descripción de la Tarea</label>
+                    <input type="text" id="taskName" class="form-control" placeholder="Ej. Ensayo Capítulo 3">
+                </div>
+                <div class="form-group">
+                    <label>Materia vinculada</label>
+                    <select id="taskSubject" class="form-control">
+                        <option value="" disabled selected>Cargando materias...</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Fecha de Entrega</label>
+                    <input type="date" id="taskDate" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label>Hora Límite</label>
+                    <input type="time" id="taskTime" class="form-control" value="23:59">
+                </div>
+            </div>
+            <button onclick="saveTask()" class="btn-primary btn-secondary">
+                <i class="fa-solid fa-plus"></i> Guardar Tarea
+            </button>
+            <div id="tasksList" style="margin-top: 25px;"></div>
+        </div>
+    </div>
+
+    <!-- SDK DE FIREBASE (Añadido para conectividad a la nube) -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore-compat.js"></script>
+
+    <script>
+        // --- INICIALIZACIÓN DE FIREBASE ---
+        const firebaseConfig = {
+            apiKey: "AIzaSyChimhVHezYOA6go-06XLlp96pJMX-mcI0",
+            authDomain: "control-de-clases-y-tareas.firebaseapp.com",
+            projectId: "control-de-clases-y-tareas",
+            storageBucket: "control-de-clases-y-tareas.firebasestorage.app",
+            messagingSenderId: "624724290598",
+            appId: "1:624724290598:web:cb282d508b9250d9c4cae7",
+            measurementId: "G-RXC05BTJ30"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        // --- UX: FOTO DE PERFIL (Se mantiene en memoria local por velocidad) ---
+        const profileUpload = document.getElementById('profileUpload');
+        const profileAvatar = document.getElementById('profileAvatar');
+        const savedAvatar = localStorage.getItem('miPerfilImg');
+        if(savedAvatar) profileAvatar.innerHTML = `<img src="${savedAvatar}" alt="Perfil">`;
+
+        profileUpload.addEventListener('change', function() {
+            const file = this.files[0];
+            if(file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const base64Img = e.target.result;
+                    localStorage.setItem('miPerfilImg', base64Img);
+                    profileAvatar.innerHTML = `<img src="${base64Img}" alt="Perfil">`;
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        document.getElementById('classImage').addEventListener('change', function(e) {
+            const fileName = e.target.files[0] ? e.target.files[0].name : "Subir portada...";
+            document.getElementById('fileNameDisplay').textContent = fileName;
+        });
+
+        const daysMapStr = { "1": "Lunes", "2": "Martes", "3": "Miércoles", "4": "Jueves", "5": "Viernes" };
+        
+        // --- GESTIÓN DE CLASES EN FIREBASE ---
+        let classes = [];
+
+        // Escucha en tiempo real la nube de Firebase
+        db.collection("clases").onSnapshot((snapshot) => {
+            classes = [];
+            snapshot.forEach((doc) => {
+                classes.push({ id: doc.id, ...doc.data() });
+            });
+            renderClasses();
+        });
+
+        function renderClasses() {
+            const list = document.getElementById('classesList');
+            list.innerHTML = '';
+            
+            updateSubjectDropdown(); 
+
+            if(classes.length === 0) {
+                list.innerHTML = '<p style="text-align:center; color:#94a3b8; font-size: 0.9rem; margin-top: 10px;">No hay clases configuradas aún.</p>';
+                return;
+            }
+
+            classes.sort((a, b) => a.day - b.day || a.time.localeCompare(b.time));
+
+            classes.forEach((cls, index) => {
+                const imageHTML = cls.img ? `<img src="${cls.img}" alt="Clase">` : `<i class="fa-solid fa-book"></i>`;
+                list.innerHTML += `
+                    <div class="list-item">
+                        <div class="item-img-box">${imageHTML}</div>
+                        <div class="item-info">
+                            <h3>${cls.name}</h3>
+                            <p><i class="fa-regular fa-clock"></i> ${daysMapStr[cls.day]} | ${cls.time} - ${cls.endTime}</p>
+                        </div>
+                        <div class="actions">
+                            <a href="${cls.link}" target="_blank" class="btn-icon play" title="Ir a clase">
+                                <i class="fa-solid fa-play"></i>
+                            </a>
+                            <button class="btn-icon delete" onclick="deleteClass('${cls.id}')" title="Eliminar">
+                                <i class="fa-solid fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        function updateSubjectDropdown() {
+            const select = document.getElementById('taskSubject');
+            select.innerHTML = '';
+            
+            if(classes.length === 0) {
+                select.innerHTML = '<option value="" disabled selected>Agrega una clase arriba primero</option>';
+            } else {
+                select.innerHTML = '<option value="" disabled selected>Selecciona tu clase...</option>';
+                classes.forEach(cls => {
+                    select.innerHTML += `<option value="${cls.name}">${cls.name}</option>`;
+                });
+            }
+        }
+
+        function processNewClass() {
+            const name = document.getElementById('className').value.trim();
+            const link = document.getElementById('classLink').value.trim();
+            const day = document.getElementById('classDay').value;
+            const time = document.getElementById('classTime').value;
+            const endTime = document.getElementById('classEndTime').value;
+            const fileInput = document.getElementById('classImage');
+            
+            if(!name || !link || !time || !endTime) return alert('Faltan datos de la clase.');
+
+            if(fileInput.files.length > 0) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    saveAndCreateAlarm(name, link, day, time, endTime, e.target.result);
+                };
+                reader.readAsDataURL(fileInput.files[0]);
+            } else {
+                saveAndCreateAlarm(name, link, day, time, endTime, null);
+            }
+        }
+
+        function saveAndCreateAlarm(name, link, day, time, endTime, imgBase64) {
+            // Guardar en Firebase
+            db.collection("clases").add({ name, link, day, time, endTime, img: imgBase64 })
+            .then(() => {
+                console.log("Clase guardada en la nube con éxito");
+            }).catch((error) => {
+                console.error("Error al guardar clase en Firebase: ", error);
+            });
+
+            const parsedDay = parseInt(day);
+            const gcalDays = {1: "MO", 2: "TU", 3: "WE", 4: "TH", 5: "FR"};
+            let date = new Date();
+            let distance = parsedDay - date.getDay();
+            if (distance < 0) distance += 7; 
+            date.setDate(date.getDate() + distance);
+
+            const pad = n => String(n).padStart(2, '0');
+            let [startHours, startMinutes] = time.split(':');
+            let dateString = `${date.getFullYear()}${pad(date.getMonth()+1)}${pad(date.getDate())}T${pad(startHours)}${pad(startMinutes)}00`;
+            
+            let [endHours, endMinutes] = endTime.split(':');
+            let endDate = new Date(date);
+            endDate.setHours(parseInt(endHours), parseInt(endMinutes));
+            let endString = `${endDate.getFullYear()}${pad(endDate.getMonth()+1)}${pad(endDate.getDate())}T${pad(endHours)}${pad(endMinutes)}00`;
+
+            const calendarUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(name)}&dates=${dateString}/${endString}&details=${encodeURIComponent("Enlace: " + link)}&recur=RRULE:FREQ=WEEKLY;BYDAY=${gcalDays[parsedDay]}`;
+
+            document.getElementById('className').value = '';
+            document.getElementById('classLink').value = '';
+            document.getElementById('classImage').value = ''; 
+            document.getElementById('fileNameDisplay').textContent = 'Subir portada...';
+
+            window.open(calendarUrl, '_blank');
+        }
+
+        function deleteClass(firebaseId) {
+            if(confirm("¿Seguro que deseas eliminar esta clase permanentemente?")) {
+                db.collection("clases").doc(firebaseId).delete();
+            }
+        }
+
+        // --- GESTIÓN DE TAREAS EN FIREBASE ---
+        let tasks = [];
+
+        db.collection("tareas").onSnapshot((snapshot) => {
+            tasks = [];
+            snapshot.forEach((doc) => {
+                tasks.push({ id: doc.id, ...doc.data() });
+            });
+            renderTasks();
+        });
+
+        function renderTasks() {
+            const list = document.getElementById('tasksList');
+            list.innerHTML = '';
+            
+            if(tasks.length === 0) {
+                list.innerHTML = '<p style="text-align:center; color:#94a3b8; font-size: 0.9rem;">No tienes tareas pendientes.</p>';
+                return;
+            }
+
+            tasks.sort((a, b) => new Date(a.date + 'T' + a.time) - new Date(b.date + 'T' + b.time));
+
+            tasks.forEach((tsk, index) => {
+                const dueDate = new Date(tsk.date + 'T' + tsk.time);
+                const now = new Date();
+                const isUrgent = (dueDate - now) > 0 && (dueDate - now) < (24 * 60 * 60 * 1000); 
+                const urgentClass = isUrgent ? 'urgent' : '';
+
+                const dateObj = new Date(tsk.date + 'T12:00:00');
+                const dateStr = dateObj.toLocaleDateString('es-ES', { month: 'short', day: 'numeric' });
+
+                list.innerHTML += `
+                    <div class="list-item task-item ${urgentClass}" id="task-${tsk.id}">
+                        <div class="item-info">
+                            <h3>${tsk.name} <span class="task-tag">${tsk.subject}</span></h3>
+                            <p><i class="fa-regular fa-calendar-xmark"></i> Vence: ${dateStr} a las ${tsk.time}</p>
+                        </div>
+                        <div class="actions">
+                            <button class="btn-icon success" onclick="completeTask('${tsk.id}')" title="Marcar como entregada">
+                                <i class="fa-solid fa-check"></i>
+                            </button>
+                            <button class="btn-icon delete" onclick="deleteTask('${tsk.id}')" title="Eliminar sin completar">
+                                <i class="fa-solid fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        function saveTask() {
+            const name = document.getElementById('taskName').value.trim();
+            const subject = document.getElementById('taskSubject').value;
+            const date = document.getElementById('taskDate').value;
+            const time = document.getElementById('taskTime').value;
+
+            if(!name || !subject || !date || !time) return alert('Por favor llena todos los campos de la tarea.');
+
+            db.collection("tareas").add({ name, subject, date, time })
+            .then(() => {
+                document.getElementById('taskName').value = '';
+                document.getElementById('taskSubject').value = '';
+                document.getElementById('taskDate').value = '';
+            });
+        }
+
+        function completeTask(firebaseId) {
+            const taskElement = document.getElementById(`task-${firebaseId}`);
+            if (taskElement) taskElement.classList.add('completing');
+            
+            setTimeout(() => {
+                db.collection("tareas").doc(firebaseId).delete();
+            }, 300);
+        }
+
+        function deleteTask(firebaseId) {
+            if(confirm("¿Eliminar esta tarea de forma permanente?")) {
+                db.collection("tareas").doc(firebaseId).delete();
+            }
+        }
+
+        // --- PASO 3-B: REGISTRO DEL SERVICE WORKER PARA PWA ---
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js')
+                    .then(registration => {
+                        console.log('App instalable registrada con éxito.', registration.scope);
+                    })
+                    .catch(err => {
+                        console.log('Fallo al registrar la App:', err);
+                    });
+            });
+        }
+    </script>
+</body>
+</html>
