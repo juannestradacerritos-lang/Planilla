@@ -229,16 +229,6 @@
         .empty-state { text-align: center; padding: 20px; color: var(--text-muted); display: flex; flex-direction: column; align-items: center; gap: 10px; }
         .empty-state i { font-size: 2.5rem; opacity: 0.3; }
         .empty-state p { font-size: 0.95rem; font-weight: 500; }
-        
-        /* ESTILOS INTERNOS DEL PDF PARA GARANTIZAR LECTURA */
-        #contenedorPDF {
-            background: #ffffff;
-            color: #1e293b;
-            padding: 20px 30px;
-            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-            font-size: 11pt;
-            line-height: 1.8;
-        }
     </style>
 </head>
 <body>
@@ -279,6 +269,10 @@
                         <i class="fa-solid fa-microphone-lines" style="width: 20px; text-align: center;"></i> Transcribir clases (IA)
                     </div>
                     <hr style="border: 0; height: 1px; background: var(--border-light); margin: 4px 0;">
+                    <!-- NUEVO BOTÓN MANUAL DE NOTIFICACIONES -->
+                    <div class="dropdown-item" onclick="pedirPermisoNotificaciones()">
+                        <i class="fa-solid fa-bell" style="width: 20px; text-align: center;"></i> Activar Alertas
+                    </div>
                     <div class="dropdown-item danger" onclick="logout()">
                         <i class="fa-solid fa-arrow-right-from-bracket" style="width: 20px; text-align: center;"></i> Cerrar sesión
                     </div>
@@ -451,6 +445,16 @@
         };
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
+        
+        // --- NUEVO: HABILITAR PERSISTENCIA OFFLINE DE FIRESTORE ---
+        db.enablePersistence().catch((err) => {
+            if (err.code == 'failed-precondition') {
+                console.log('Persistencia falló: Múltiples pestañas abiertas.');
+            } else if (err.code == 'unimplemented') {
+                console.log('Persistencia offline no soportada por el navegador.');
+            }
+        });
+
         const auth = firebase.auth();
         const provider = new firebase.auth.GoogleAuthProvider();
 
@@ -459,6 +463,11 @@
         let unsubscribeTasks = null;
         let editingClassId = null;
         let editingTaskId = null;
+        
+        // Variables para las notificaciones
+        let notificacionesActivas = false;
+        let eventosNotificados = new Set();
+        let intervaloNotificaciones;
 
         window.addEventListener('DOMContentLoaded', () => {
             const savedKey = localStorage.getItem('gemini_saved_key');
@@ -496,6 +505,12 @@
                 document.getElementById('dashboard-view').style.display = 'flex';
                 document.getElementById('userName').textContent = user.displayName;
                 document.getElementById('profileAvatar').innerHTML = `<img src="${user.photoURL}" alt="Perfil">`;
+                
+                // Intentar pedir permisos automáticamente
+                if ("Notification" in window && Notification.permission === "granted") {
+                    notificacionesActivas = true;
+                }
+                
                 loadUserData();
             } else {
                 currentUser = null;
@@ -503,10 +518,16 @@
                 document.getElementById('login-view').style.display = 'flex';
                 if(unsubscribeClasses) unsubscribeClasses();
                 if(unsubscribeTasks) unsubscribeTasks();
+                if(intervaloNotificaciones) clearInterval(intervaloNotificaciones);
             }
         });
         
-        function loginWithGoogle() { auth.signInWithPopup(provider).catch(error => console.error(error)); }
+        function loginWithGoogle() { 
+            auth.signInWithPopup(provider).then(() => {
+                pedirPermisoNotificaciones(); // Pedimos el permiso tras el clic exitoso
+            }).catch(error => console.error(error)); 
+        }
+        
         function logout() { auth.signOut(); }
 
         document.getElementById('classImage').addEventListener('change', function(e) {
@@ -526,7 +547,80 @@
             unsubscribeTasks = db.collection("tareas").where("userId", "==", currentUser.uid).onSnapshot((snapshot) => {
                 tasks = []; snapshot.forEach((doc) => { tasks.push({ id: doc.id, ...doc.data() }); }); renderTasks();
             });
+            
+            // Iniciar el chequeo de notificaciones cada 60 segundos
+            if(intervaloNotificaciones) clearInterval(intervaloNotificaciones);
+            intervaloNotificaciones = setInterval(chequearAlertas, 60000);
         }
+
+        // --- NUEVO: FUNCIONES DE NOTIFICACIONES PUSH ---
+        function pedirPermisoNotificaciones() {
+            if (!("Notification" in window)) {
+                alert("Tu navegador no soporta notificaciones.");
+                return;
+            }
+            if (Notification.permission === "granted") {
+                notificacionesActivas = true;
+            } else if (Notification.permission !== "denied") {
+                Notification.requestPermission().then(permission => {
+                    if (permission === "granted") {
+                        notificacionesActivas = true;
+                        new Notification("¡Alertas Activadas!", { body: "Te avisaremos 15 min antes de tus clases y 1 hora antes de tus tareas." });
+                    }
+                });
+            }
+        }
+
+        function chequearAlertas() {
+            if (!notificacionesActivas || classes.length === 0) return;
+
+            const ahora = new Date();
+            let diaActual = ahora.getDay();
+            if (diaActual === 0) diaActual = 7; // Ajustar domingo de 0 a 7
+            const msAhora = ahora.getTime();
+
+            // Revisar Clases (Avisar si faltan 15 min o menos)
+            classes.forEach(cls => {
+                if (parseInt(cls.day) === diaActual) {
+                    const [horas, minutos] = cls.time.split(':');
+                    let fechaClase = new Date(ahora);
+                    fechaClase.setHours(parseInt(horas), parseInt(minutos), 0, 0);
+                    
+                    const diffMs = fechaClase.getTime() - msAhora;
+                    const diffMinutos = Math.floor(diffMs / 60000);
+
+                    if (diffMinutos > 0 && diffMinutos <= 15) {
+                        const notifId = `clase_${cls.id}_${fechaClase.toDateString()}`;
+                        if (!eventosNotificados.has(notifId)) {
+                            new Notification("¡Clase a punto de empezar! 📚", {
+                                body: `Tu clase de ${cls.name} comienza en ${diffMinutos} minutos.`,
+                                icon: "https://cdn-icons-png.flaticon.com/512/3135/3135715.png"
+                            });
+                            eventosNotificados.add(notifId);
+                        }
+                    }
+                }
+            });
+
+            // Revisar Tareas (Avisar si falta 1 hora o menos)
+            tasks.forEach(tsk => {
+                const dueDate = new Date(tsk.date + 'T' + tsk.time);
+                const diffMs = dueDate.getTime() - msAhora;
+                const diffHoras = diffMs / (1000 * 60 * 60);
+
+                if (diffHoras > 0 && diffHoras <= 1) {
+                    const notifId = `tarea_${tsk.id}_1h`;
+                    if (!eventosNotificados.has(notifId)) {
+                        new Notification("¡Tarea por vencer! ⏰", {
+                            body: `La actividad "${tsk.name}" de ${tsk.subject} vence en menos de 1 hora.`,
+                            icon: "https://cdn-icons-png.flaticon.com/512/3135/3135715.png"
+                        });
+                        eventosNotificados.add(notifId);
+                    }
+                }
+            });
+        }
+        // --- FIN NOTIFICACIONES ---
 
         function renderClasses() {
             const list = document.getElementById('classesList');
@@ -739,7 +833,6 @@
             btn.disabled = true;
             window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
 
-            // TÍTULOS CONDICIONALES ACTUALIZADOS
             let tituloMostrar = tipoAnalisis === "transcripcion" ? "Transcripción de la Clase de" : "Resumen Inteligente de";
 
             let promptInteligente = "";
