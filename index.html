@@ -154,7 +154,8 @@
 </head>
 <body>
 
-    <body>
+   </head>
+<body>
     <!-- PANTALLA DE CARGA INICIAL (Escudo contra el parpadeo) -->
     <div id="loading-view" style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; width: 100%; background: #050505; position: fixed; top: 0; left: 0; z-index: 9999; color: #94a3b8; gap: 15px;">
         <i class="fa-solid fa-spinner fa-spin" style="font-size: 2.5rem; color: #3b82f6;"></i>
@@ -163,8 +164,16 @@
 
     <!-- PANTALLA DE INICIO DE SESIÓN -->
     <div id="login-view">
-
+        <i class="fa-solid fa-graduation-cap" style="font-size: 4rem; color: #3b82f6;"></i>
+        <h1>Panel de clases y tareas</h1>
+        <button class="btn-google" onclick="loginWithGoogle()">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg" width="20" alt="Google">
+            Inicia sesión con Google
+        </button>
+    </div>
+    
     <!-- PANEL PRINCIPAL (Oculto hasta iniciar sesión) -->
+    <div class="dashboard-wrapper" id="dashboard-view">
     <div class="dashboard-wrapper" id="dashboard-view">
         
         <!-- Cabecera Personalizada -->
