@@ -203,7 +203,7 @@
                     <select id="classDay" class="form-control">
                         <option value="1">Lunes</option><option value="2">Martes</option>
                         <option value="3">Miércoles</option><option value="4">Jueves</option>
-                        <option value="5">Viernes</option><option value="6">Sabado</option>
+                        <option value="5">Viernes</option><option value="6">Sábado</option>
                         <option value="7">Domingo</option>
                     </select>
                 </div>
@@ -277,6 +277,10 @@
         };
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
+
+        // 🟢 NUEVO: Activa el caché local para que tus tareas guardadas no desaparezcan si abres la app sin internet
+        db.enablePersistence().catch(err => console.log("Persistencia Offline falló:", err));
+
         const auth = firebase.auth();
         const provider = new firebase.auth.GoogleAuthProvider();
 
@@ -314,9 +318,39 @@
             document.getElementById('fileNameDisplay').textContent = fileName;
         });
 
-        const daysMapStr = { "1": "Lunes", "2": "Martes", "3": "Miércoles", "4": "Jueves", "5": "Viernes", "6": "Sabado", "7": "Domingo" };
+        const daysMapStr = { "1": "Lunes", "2": "Martes", "3": "Miércoles", "4": "Jueves", "5": "Viernes", "6": "Sábado", "7": "Domingo" };
         let classes = [];
         let tasks = [];
+
+        // --- 🟢 NUEVO: AUTOGUARDADO (BORRADORES) ---
+        // Guarda lo que escribes por si se cierra la app por accidente
+        function saveFormDrafts() {
+            const fields = ['className', 'classLink', 'classDay', 'classTime', 'classEndTime', 'taskName', 'taskDate', 'taskTime'];
+            fields.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) localStorage.setItem('draft_' + id, el.value);
+            });
+        }
+
+        // Restaura lo que dejaste a medias al volver a entrar
+        function restoreFormDrafts() {
+            const fields = ['className', 'classLink', 'classDay', 'classTime', 'classEndTime', 'taskName', 'taskDate', 'taskTime'];
+            fields.forEach(id => {
+                const savedValue = localStorage.getItem('draft_' + id);
+                if (savedValue) {
+                    const el = document.getElementById(id);
+                    if (el) el.value = savedValue;
+                }
+            });
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            restoreFormDrafts();
+            document.querySelectorAll('.form-control').forEach(el => {
+                el.addEventListener('input', saveFormDrafts);
+                el.addEventListener('change', saveFormDrafts);
+            });
+        });
 
         // --- CARGAR DATOS PRIVADOS DEL USUARIO ---
         function loadUserData() {
@@ -410,7 +444,7 @@
             });
 
             const parsedDay = parseInt(day);
-            const gcalDays = {1: "MO", 2: "TU", 3: "WE", 4: "TH", 5: "FR" 6: "SA" 7: "SU"};
+            const gcalDays = {1: "MO", 2: "TU", 3: "WE", 4: "TH", 5: "FR", 6: "SA", 7: "SU"};
             let date = new Date();
             let distance = parsedDay - date.getDay();
             if (distance < 0) distance += 7; 
@@ -431,6 +465,9 @@
             document.getElementById('classLink').value = '';
             document.getElementById('classImage').value = ''; 
             document.getElementById('fileNameDisplay').textContent = 'Subir portada...';
+
+            // Limpiamos los borradores cuando la clase ya se guardó con éxito
+            ['className', 'classLink'].forEach(id => localStorage.removeItem('draft_' + id));
 
             window.open(calendarUrl, '_blank');
         }
@@ -496,6 +533,9 @@
                 document.getElementById('taskName').value = '';
                 document.getElementById('taskSubject').value = '';
                 document.getElementById('taskDate').value = '';
+                
+                // Limpiamos los borradores de la tarea al guardarla
+                ['taskName', 'taskDate'].forEach(id => localStorage.removeItem('draft_' + id));
             });
         }
 
