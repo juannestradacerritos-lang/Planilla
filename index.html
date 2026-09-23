@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mis Clases y Tareas</title>
+    <title>Dashboard Estudiantil | Mis Clases y Tareas</title>
     
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#3b82f6">
@@ -155,9 +155,9 @@
     <!-- PANTALLA DE INICIO DE SESIÓN -->
     <div id="login-view">
         <i class="fa-solid fa-graduation-cap" style="font-size: 4rem; color: #3b82f6;"></i>
-        <h1>Clases y Tareas</h1>
-        <p style="color: #94a3b8; margin-bottom: 20px;"        
-<button class="btn-google" onclick="loginWithGoogle()">
+        <h1>Panel Universitario</h1>
+        <p style="color: #94a3b8; margin-bottom: 20px;">Gestión de enlaces, calendarios y tareas en la nube.</p>
+        <button class="btn-google" onclick="loginWithGoogle()">
             <img src="https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg" width="20" alt="Google">
             Iniciar sesión con Google
         </button>
@@ -455,7 +455,7 @@
             list.innerHTML = '';
             
             if(tasks.length === 0) {
-                list.innerHTML = '<p style="text-align:center; color:#94a3b8; font-size: 0.9rem;">No tienes tareas pendientes</p>';
+                list.innerHTML = '<p style="text-align:center; color:#94a3b8; font-size: 0.9rem;">No tienes tareas pendientes. ¡Genial!</p>';
                 return;
             }
 
