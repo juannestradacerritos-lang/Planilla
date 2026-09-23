@@ -59,10 +59,6 @@
             box-shadow: 0 10px 25px rgba(255, 255, 255, 0.1);
         }
         .btn-google:hover { transform: translateY(-3px); box-shadow: 0 15px 35px rgba(255, 255, 255, 0.2); }
-        
-        .btn-prueba {
-            background: linear-gradient(135deg, var(--secondary), #6d28d9); color: #fff;
-        }
 
         .dashboard-wrapper {
             width: 100%; max-width: 600px; display: none; flex-direction: column; gap: 20px;
@@ -230,7 +226,8 @@
             <img src="https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg" width="22" alt="Google">
             Iniciar sesión con Google
         </button>
-      
+    </div>
+    
     <!-- PANEL PRINCIPAL -->
     <div class="dashboard-wrapper" id="dashboard-view">
         
@@ -259,7 +256,7 @@
                     </div>
                     <hr style="border: 0; height: 1px; background: var(--border-light); margin: 4px 0;">
                     <div class="dropdown-item danger" onclick="logout()">
-                        <i class="fa-solid fa-arrow-right-from-bracket" style="width: 20px; text-align: center;"></i> Salir
+                        <i class="fa-solid fa-arrow-right-from-bracket" style="width: 20px; text-align: center;"></i> Cerrar sesión
                     </div>
                 </div>
             </div>
@@ -320,7 +317,7 @@
                 <div id="classesList"></div>
             </div>
         </div>
-      
+
         <!-- =================== SECCIÓN DE TAREAS =================== -->
         <div id="vista-tareas" style="display: none;">
             <div class="card">
@@ -418,7 +415,6 @@
         let unsubscribeTasks = null;
         let editingClassId = null;
         let editingTaskId = null;
-        let modoPrueba = false; // Variable para saber si estamos en modo prueba
 
         window.addEventListener('DOMContentLoaded', () => {
             const savedKey = localStorage.getItem('gemini_saved_key');
@@ -449,36 +445,15 @@
             document.getElementById('vistaActualTexto').textContent = titulos[vista];
         }
 
-        // --- SISTEMA PARA MODO DE PRUEBA (BYPASS FIREBASE) ---
-        function entrarModoPrueba() {
-            modoPrueba = true;
-            currentUser = {
-                uid: 'usuario_prueba_123',
-                displayName: 'Estudiante de Prueba',
-                photoURL: 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png'
-            };
-            document.getElementById('login-view').style.display = 'none';
-            document.getElementById('dashboard-view').style.display = 'flex';
-            document.getElementById('userName').textContent = currentUser.displayName;
-            document.getElementById('profileAvatar').innerHTML = `<img src="${currentUser.photoURL}" alt="Perfil">`;
-            
-            // En modo prueba usamos datos locales falsos para no causar error en Firebase
-            classes = [{id: "1", name: "Economía", day: "1", time: "10:00", endTime: "12:00", link: "#"}];
-            tasks = [{id: "1", name: "Ensayo 1", subject: "Economía", date: "2026-12-31", time: "23:59"}];
-            renderClasses();
-            renderTasks();
-            alert("Has entrado en Modo Prueba local. Los datos guardados aquí se borrarán al recargar la página.");
-        }
-
         auth.onAuthStateChanged((user) => {
-            if (user && !modoPrueba) {
+            if (user) {
                 currentUser = user;
                 document.getElementById('login-view').style.display = 'none';
                 document.getElementById('dashboard-view').style.display = 'flex';
                 document.getElementById('userName').textContent = user.displayName;
                 document.getElementById('profileAvatar').innerHTML = `<img src="${user.photoURL}" alt="Perfil">`;
                 loadUserData();
-            } else if (!modoPrueba) {
+            } else {
                 currentUser = null;
                 document.getElementById('dashboard-view').style.display = 'none';
                 document.getElementById('login-view').style.display = 'flex';
@@ -489,13 +464,7 @@
         
         function loginWithGoogle() { auth.signInWithPopup(provider).catch(error => console.error(error)); }
         
-        function logout() { 
-            if(modoPrueba) {
-                window.location.reload();
-            } else {
-                auth.signOut(); 
-            }
-        }
+        function logout() { auth.signOut(); }
 
         document.getElementById('classImage').addEventListener('change', function(e) {
             document.getElementById('fileNameDisplay').textContent = e.target.files[0] ? e.target.files[0].name : "Adjuntar imagen...";
@@ -508,7 +477,6 @@
         const daysMapStr = { "1": "Lunes", "2": "Martes", "3": "Miércoles", "4": "Jueves", "5": "Viernes", "6": "Sábado", "7": "Domingo" };
 
         function loadUserData() {
-            if (modoPrueba) return;
             unsubscribeClasses = db.collection("clases").where("userId", "==", currentUser.uid).onSnapshot((snapshot) => {
                 classes = []; snapshot.forEach((doc) => { classes.push({ id: doc.id, ...doc.data() }); }); renderClasses();
             });
@@ -574,12 +542,10 @@
                     const reader = new FileReader();
                     reader.onload = function(e) { 
                         updateData.img = e.target.result; 
-                        if(modoPrueba) { resetClassForm(); return; }
                         db.collection("clases").doc(editingClassId).update(updateData).then(resetClassForm); 
                     };
                     reader.readAsDataURL(fileInput.files[0]);
                 } else {
-                    if(modoPrueba) { resetClassForm(); return; }
                     db.collection("clases").doc(editingClassId).update(updateData).then(resetClassForm);
                 }
             } else {
@@ -594,12 +560,7 @@
         }
 
         function saveAndCreateAlarm(name, link, day, time, endTime, imgBase64) {
-            if(!modoPrueba) {
-                db.collection("clases").add({ userId: currentUser.uid, name, link, day, time, endTime, img: imgBase64 });
-            } else {
-                classes.push({ id: Date.now().toString(), name, link, day, time, endTime, img: imgBase64 });
-                renderClasses();
-            }
+            db.collection("clases").add({ userId: currentUser.uid, name, link, day, time, endTime, img: imgBase64 });
             
             const parsedDay = parseInt(day);
             const gcalDays = {1: "MO", 2: "TU", 3: "WE", 4: "TH", 5: "FR", 6: "SA", 7: "SU"};
@@ -625,12 +586,7 @@
 
         function deleteClass(firebaseId) { 
             if(confirm("¿Eliminar clase?")) {
-                if(modoPrueba) {
-                    classes = classes.filter(c => c.id !== firebaseId);
-                    renderClasses();
-                } else {
-                    db.collection("clases").doc(firebaseId).delete(); 
-                }
+                db.collection("clases").doc(firebaseId).delete(); 
             }
         }
 
@@ -686,15 +642,11 @@
         function processTask() {
             const name = document.getElementById('taskName').value.trim(); const subject = document.getElementById('taskSubject').value; const date = document.getElementById('taskDate').value; const time = document.getElementById('taskTime').value;
             if(!name || !subject || !date || !time) return alert('Faltan datos obligatorios para la tarea.');
+            
             if (editingTaskId) { 
-                if(!modoPrueba) db.collection("tareas").doc(editingTaskId).update({ name, subject, date, time }).then(resetTaskForm); 
+                db.collection("tareas").doc(editingTaskId).update({ name, subject, date, time }).then(resetTaskForm); 
             } else { 
-                if(!modoPrueba) {
-                    db.collection("tareas").add({ userId: currentUser.uid, name, subject, date, time }).then(resetTaskForm);
-                } else {
-                    tasks.push({ id: Date.now().toString(), name, subject, date, time });
-                    renderTasks(); resetTaskForm();
-                }
+                db.collection("tareas").add({ userId: currentUser.uid, name, subject, date, time }).then(resetTaskForm);
             }
         }
 
@@ -710,23 +662,13 @@
             const el = document.getElementById(`task-${firebaseId}`); 
             if (el) el.classList.add('completing'); 
             setTimeout(() => { 
-                if(!modoPrueba) {
-                    db.collection("tareas").doc(firebaseId).delete();
-                } else {
-                    tasks = tasks.filter(t => t.id !== firebaseId);
-                    renderTasks();
-                }
+                db.collection("tareas").doc(firebaseId).delete();
             }, 300); 
         }
 
         function deleteTask(firebaseId) { 
             if(confirm("¿Eliminar esta tarea?")) {
-                if(!modoPrueba) {
-                    db.collection("tareas").doc(firebaseId).delete(); 
-                } else {
-                    tasks = tasks.filter(t => t.id !== firebaseId);
-                    renderTasks();
-                }
+                db.collection("tareas").doc(firebaseId).delete(); 
             }
         }
 
@@ -755,7 +697,6 @@
             try {
                 textoResultado.innerHTML = `⏳ <b>Paso 1/2:</b> Subiendo archivo a los servidores de Gemini...`;
                 
-                // 1. Subir archivo a Gemini
                 const uploadUrl = `https://generativelanguage.googleapis.com/upload/v1beta/files?key=${GEMINI_API_KEY}`;
                 const uploadRes = await fetch(uploadUrl, {
                     method: 'POST',
@@ -774,7 +715,6 @@
                 }
                 const fileUri = uploadData.file.uri;
 
-                // 2. Arreglo de Modelos de Respaldo EXCLUSIVOS DE GEMINI (Basado en la foto)
                 const modelosDeRespaldo = [
                     "gemini-3.8-flash",
                     "gemini-3.5-flash-lite"
