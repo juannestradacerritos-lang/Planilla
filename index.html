@@ -141,15 +141,22 @@
             padding-right: 40px; text-overflow: ellipsis; overflow: hidden; white-space: nowrap;
         }
 
+        /* DISEÑO DE BOTÓN DE SUBIDA DE ARCHIVO OPTIMIZADO PARA MÓVIL */
         .custom-file-upload {
             display: flex; align-items: center; gap: 10px; padding: 13px 16px;
             background: rgba(0, 0, 0, 0.2); border: 1px dashed rgba(148, 163, 184, 0.3);
             border-radius: 12px; color: var(--text-muted); cursor: pointer; transition: all 0.3s;
-            font-size: 0.9rem; overflow: hidden; white-space: nowrap; height: 100%;
+            font-size: 0.9rem; width: 100%;
         }
         .custom-file-upload:hover { border-color: var(--primary); color: #fff; background: rgba(59, 130, 246, 0.05);}
         .custom-file-upload input[type="file"] { display: none; }
-        .custom-file-upload i { color: var(--primary); font-size: 1.1rem; }
+        .custom-file-upload i { color: var(--primary); font-size: 1.1rem; flex-shrink: 0; }
+        .custom-file-upload span {
+            flex: 1; /* Toma todo el espacio disponible */
+            white-space: nowrap; /* Evita que el texto baje de línea */
+            overflow: hidden; /* Oculta lo que sobra */
+            text-overflow: ellipsis; /* Pone los "..." al final */
+        }
 
         .btn-primary {
             background: linear-gradient(135deg, var(--primary), #2563eb); color: white;
@@ -272,7 +279,7 @@
                     <div class="form-group">
                         <label>Portada (Opcional)</label>
                         <label class="custom-file-upload">
-                            <i class="fa-solid fa-cloud-arrow-up"></i><span id="fileNameDisplay" style="text-overflow: ellipsis; overflow: hidden;">Adjuntar imagen...</span>
+                            <i class="fa-solid fa-cloud-arrow-up"></i><span id="fileNameDisplay">Adjuntar imagen...</span>
                             <input type="file" id="classImage" accept="image/*">
                         </label>
                     </div>
@@ -360,16 +367,16 @@
                     <select id="audioSubject" class="form-control"></select>
                 </div>
 
+                <!-- DISEÑO DE ARCHIVO CORREGIDO -->
                 <div class="form-group" style="margin-bottom: 16px;">
                     <label>Archivo de audio o video (Máx 25 MB)</label>
-                    <label class="custom-file-upload" style="border-style: solid; justify-content: center;">
-                        <i class="fa-solid fa-cloud-arrow-up" style="font-size: 1.2rem;"></i>
+                    <label class="custom-file-upload">
+                        <i class="fa-solid fa-cloud-arrow-up"></i>
                         <span id="audioFileName">Buscar archivo de clase...</span>
                         <input type="file" id="classAudioFile" accept="audio/*,video/*" onchange="actualizarNombreAudio(this)">
                     </label>
                 </div>
                 
-                <!-- ESTE CAMPO AHORA ESTÁ LIMPIO PARA QUE LO LLENES TÚ EN LA APP -->
                 <div class="form-group" style="margin-bottom: 16px;">
                     <label>Tu Llave de IA (Groq API Key)</label>
                     <input type="password" id="inputApiKey" class="form-control" value="" placeholder="Pega aquí tu clave gsk_..." oninput="guardarLlaveLocal(this.value)">
@@ -581,7 +588,6 @@
 
         function deleteClass(firebaseId) { if(confirm("¿Eliminar clase?")) db.collection("clases").doc(firebaseId).delete(); }
 
-        // --- SISTEMA DE TAREAS CON CONTADOR DE TIEMPO INTELIGENTE ---
         function renderTasks() {
             const list = document.getElementById('tasksList'); list.innerHTML = '';
             if(tasks.length === 0) { list.innerHTML = `<div class="empty-state"><i class="fa-solid fa-mug-hot" style="font-size: 2rem;"></i><p>No tienes tareas pendientes.</p></div>`; return; }
@@ -650,7 +656,7 @@
 
 
         // ==========================================================
-        // 🔥 LÓGICA DE IA (GROQ) CON MODELOS ACTUALIZADOS Y ACTIVOS
+        // 🔥 LÓGICA DE IA (GROQ) CON MODELOS SEGUROS
         // ==========================================================
         async function procesarAudioConIA() {
             const materia = document.getElementById('audioSubject').value;
@@ -676,7 +682,6 @@
             window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
 
             try {
-                // PASO 1: Transcribir el audio usando Whisper-Large-v3-Turbo en Groq
                 textoResultado.innerHTML = `⏳ <b>Paso 1/2:</b> Transcribiendo audio de la clase velozmente...`;
                 
                 const formData = new FormData();
@@ -703,20 +708,17 @@
                     throw new Error("No se logró detectar ninguna voz humana en este archivo.");
                 }
 
-                // PASO 2: Resumir el texto usando una lista de modelos gratuitos 100% activos hoy en día
+                // Lista de modelos garantizados para la capa gratuita actual de Groq
                 const modelosDeRespaldo = [
+                    "llama-3.3-70b-versatile",
                     "llama-3.1-8b-instant",
-                    "gemma2-9b-it",
-                    "llama3-8b-8192"
+                    "gemma2-9b-it"
                 ];
 
                 let exitoChat = false;
                 let respuestaFinal = "";
                 
-                const promptInteligente = `Actúa como el mejor estudiante universitario. Lee esta transcripción de una clase de '${materia}'. Haz un resumen súper detallado con los puntos clave y temas importantes. Al final del resumen, crea una sección que diga 'TAREAS PENDIENTES:' y enlista de forma clara todas las tareas, ensayos o investigaciones que el profesor asignó. Si no dejó tarea, escribe 'No se asignaron tareas en esta sesión'.
-
-Transcripción de la clase:
-"${textoTranscrito}"`;
+                const promptInteligente = `Actúa como el mejor estudiante universitario. Lee esta transcripción de una clase (o material) de '${materia}'. Haz un resumen súper detallado con los puntos clave y temas importantes. Al final del resumen, crea una sección que diga 'TAREAS PENDIENTES:' y enlista de forma clara todas las tareas, ensayos o investigaciones que se detecten. Si no dejó tarea, escribe 'No se detectaron tareas'.\n\nTranscripción:\n"${textoTranscrito}"`;
 
                 for (let i = 0; i < modelosDeRespaldo.length; i++) {
                     let modeloActual = modelosDeRespaldo[i];
