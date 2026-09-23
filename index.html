@@ -659,7 +659,7 @@
                 textoResultado.innerHTML = `⏳ <b>Paso 2/2:</b> ¡Archivo subido con éxito! Gemini está escuchando tu clase y escribiendo el resumen... (Esto puede tardar un par de minutos)`;
 
                 // 2. Pedir a Gemini que analice la clase (AHORA CON MODELO CORREGIDO)
-                const generateUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${GEMINI_API_KEY}`;
+                const generateUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-latest:generateContent?key=${GEMINI_API_KEY}`;
                 const prompt = `Actúa como el mejor estudiante universitario. Estás escuchando una clase de la materia '${materia}'. Haz un resumen súper detallado con los puntos clave y temas importantes. Al final del resumen, crea una sección que diga 'TAREAS PENDIENTES:' y enlista de forma clara todas las tareas, ensayos o investigaciones que el profesor asignó. Si no dejó tarea, escribe 'No se asignaron tareas en esta sesión'.`;
 
                 const generateRes = await fetch(generateUrl, {
