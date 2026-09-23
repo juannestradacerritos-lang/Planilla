@@ -41,7 +41,7 @@
             padding: 30px 15px; 
             overflow-x: hidden;
         }
-        /* Pantalla de Login (NUEVO) */
+        /* Pantalla de Login */
         #login-view {
             display: none; flex-direction: column; align-items: center; justify-content: center;
             width: 100%; max-width: 400px; text-align: center; gap: 20px;
@@ -56,7 +56,7 @@
         .btn-google:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(255, 255, 255, 0.2); }
 
         .dashboard-wrapper {
-            width: 100%; max-width: 550px; display: none; flex-direction: column; gap: 25px;
+            width: 100%; max-width: 550px; display: flex; flex-direction: column; gap: 25px;
         }
 
         .header { display: flex; align-items: center; gap: 15px; margin-bottom: 5px; justify-content: space-between; }
@@ -153,12 +153,6 @@
     </style>
 </head>
 <body>
-    <!-- PANTALLA DE CARGA INICIAL (Escudo contra el parpadeo) -->
-    <div id="loading-view" style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; width: 100%; background: #050505; position: fixed; top: 0; left: 0; z-index: 9999; color: #94a3b8; gap: 15px;">
-        <i class="fa-solid fa-spinner fa-spin" style="font-size: 2.5rem; color: #3b82f6;"></i>
-        <p style="font-family: 'Inter', sans-serif; font-size: 0.95rem;">Cargando tu espacio...</p>
-    </div>
-
     <!-- PANTALLA DE INICIO DE SESIÓN -->
     <div id="login-view">
         <i class="fa-solid fa-graduation-cap" style="font-size: 4rem; color: #3b82f6;"></i>
@@ -169,9 +163,8 @@
         </button>
     </div>
     
-    <!-- PANEL PRINCIPAL (Oculto hasta iniciar sesión) -->
+    <!-- PANEL PRINCIPAL -->
     <div class="dashboard-wrapper" id="dashboard-view">
-        
         <!-- Cabecera Personalizada -->
         <div class="header">
             <div class="profile-section">
@@ -210,7 +203,8 @@
                     <select id="classDay" class="form-control">
                         <option value="1">Lunes</option><option value="2">Martes</option>
                         <option value="3">Miércoles</option><option value="4">Jueves</option>
-                        <option value="5">Viernes</option>
+                        <option value="5">Viernes</option><option value="4">Sabado</option>
+                        <option value="4">Domingo</option>
                     </select>
                 </div>
                 <div class="form-group">
@@ -265,7 +259,7 @@
         </div>
     </div>
 
-    <!-- SDK DE FIREBASE (Con módulo de Autenticación añadido) -->
+    <!-- SDK DE FIREBASE -->
     <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore-compat.js"></script>
@@ -292,9 +286,6 @@
 
        // --- SISTEMA DE AUTENTICACIÓN ---
        auth.onAuthStateChanged((user) => {
-            const loadingView = document.getElementById('loading-view');
-            if(loadingView) loadingView.style.display = 'none';
-
             if (user) {
                 currentUser = user;
                 document.getElementById('login-view').style.display = 'none';
@@ -313,14 +304,6 @@
                 if(unsubscribeTasks) unsubscribeTasks();
             }
         });
-
-        // 🛡️ ESCUDO EXTRA (Pégalo aquí abajito)
-        setTimeout(() => {
-            const loadingView = document.getElementById('loading-view');
-            if (loadingView && loadingView.style.display !== 'none') {
-                loadingView.style.display = 'none';
-            }
-        }, 2000);
         
         function loginWithGoogle() { auth.signInWithPopup(provider); }
         function logout() { auth.signOut(); }
@@ -337,7 +320,6 @@
 
         // --- CARGAR DATOS PRIVADOS DEL USUARIO ---
         function loadUserData() {
-            // Escuchar SOLO las clases del usuario actual (userId)
             unsubscribeClasses = db.collection("clases")
                 .where("userId", "==", currentUser.uid)
                 .onSnapshot((snapshot) => {
@@ -346,7 +328,6 @@
                     renderClasses();
                 });
 
-            // Escuchar SOLO las tareas del usuario actual
             unsubscribeTasks = db.collection("tareas")
                 .where("userId", "==", currentUser.uid)
                 .onSnapshot((snapshot) => {
@@ -423,7 +404,6 @@
         }
 
         function saveAndCreateAlarm(name, link, day, time, endTime, imgBase64) {
-            // Se añade el "userId" para vincular la clase al usuario que la está creando
             db.collection("clases").add({ 
                 userId: currentUser.uid, 
                 name, link, day, time, endTime, img: imgBase64 
