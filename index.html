@@ -41,13 +41,15 @@
             padding: 30px 15px; 
             overflow-x: hidden;
         }
-        /* Pantalla de Login */
+
+        /* Ambas vistas ocultas por defecto para evitar parpadeos */
         #login-view {
             display: none; flex-direction: column; align-items: center; justify-content: center;
             width: 100%; max-width: 400px; text-align: center; gap: 20px;
             margin-top: -40px; 
         }
         #login-view h1 { font-size: 2rem; background: var(--gradient-text); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        
         .btn-google {
             background: #fff; color: #1e293b; border: none; padding: 12px 20px; border-radius: 10px;
             font-weight: 600; font-size: 1rem; cursor: pointer; transition: 0.2s;
@@ -56,7 +58,7 @@
         .btn-google:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(255, 255, 255, 0.2); }
 
         .dashboard-wrapper {
-            width: 100%; max-width: 550px; display: flex; flex-direction: column; gap: 25px;
+            width: 100%; max-width: 550px; display: none; flex-direction: column; gap: 25px;
         }
 
         .header { display: flex; align-items: center; gap: 15px; margin-bottom: 5px; justify-content: space-between; }
@@ -287,9 +289,9 @@
         let unsubscribeClasses = null;
         let unsubscribeTasks = null;
 
-        // CRUCIAL: Capturar el resultado del redireccionamiento al volver de Google en la PWA
+        // Capturar resultado del redirect al volver de Google
         auth.getRedirectResult().catch((error) => {
-            console.error("Error en getRedirectResult:", error);
+            console.error("Error en redirect:", error);
         });
 
         // --- SISTEMA DE AUTENTICACIÓN ---
@@ -305,8 +307,8 @@
                 loadUserData();
             } else {
                 currentUser = null;
-                document.getElementById('login-view').style.display = 'flex';
                 document.getElementById('dashboard-view').style.display = 'none';
+                document.getElementById('login-view').style.display = 'flex';
                 
                 if(unsubscribeClasses) unsubscribeClasses();
                 if(unsubscribeTasks) unsubscribeTasks();
