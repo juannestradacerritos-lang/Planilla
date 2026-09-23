@@ -314,7 +314,7 @@
             document.getElementById('fileNameDisplay').textContent = fileName;
         });
 
-        const daysMapStr = { "1": "Lunes", "2": "Martes", "3": "Miércoles", "4": "Jueves", "5": "Viernes" };
+        const daysMapStr = { "1": "Lunes", "2": "Martes", "3": "Miércoles", "4": "Jueves", "5": "Viernes", "6": "Sabado", "7": "Domingo" };
         let classes = [];
         let tasks = [];
 
@@ -410,7 +410,7 @@
             });
 
             const parsedDay = parseInt(day);
-            const gcalDays = {1: "MO", 2: "TU", 3: "WE", 4: "TH", 5: "FR"};
+            const gcalDays = {1: "MO", 2: "TU", 3: "WE", 4: "TH", 5: "FR" 6: "SA" 7: "SU"};
             let date = new Date();
             let distance = parsedDay - date.getDay();
             if (distance < 0) distance += 7; 
