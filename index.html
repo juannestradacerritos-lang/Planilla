@@ -287,8 +287,13 @@
         let unsubscribeClasses = null;
         let unsubscribeTasks = null;
 
-       // --- SISTEMA DE AUTENTICACIÓN ---
-       auth.onAuthStateChanged((user) => {
+        // CRUCIAL: Capturar el resultado del redireccionamiento al volver de Google en la PWA
+        auth.getRedirectResult().catch((error) => {
+            console.error("Error en getRedirectResult:", error);
+        });
+
+        // --- SISTEMA DE AUTENTICACIÓN ---
+        auth.onAuthStateChanged((user) => {
             if (user) {
                 currentUser = user;
                 document.getElementById('login-view').style.display = 'none';
@@ -308,7 +313,6 @@
             }
         });
         
-        // CORREGIDO: Usar Redirect en lugar de Popup para evitar bloqueos en la PWA del celular
         function loginWithGoogle() { 
             auth.signInWithRedirect(provider); 
         }
