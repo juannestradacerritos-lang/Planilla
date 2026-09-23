@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Panel Pro IA</title>
+    <title>Panel U - Pro IA</title>
     
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#0f172a">
@@ -229,6 +229,16 @@
         .empty-state { text-align: center; padding: 20px; color: var(--text-muted); display: flex; flex-direction: column; align-items: center; gap: 10px; }
         .empty-state i { font-size: 2.5rem; opacity: 0.3; }
         .empty-state p { font-size: 0.95rem; font-weight: 500; }
+        
+        /* ESTILOS INTERNOS DEL PDF PARA GARANTIZAR LECTURA */
+        #contenedorPDF {
+            background: #ffffff;
+            color: #1e293b;
+            padding: 20px 30px;
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            font-size: 11pt;
+            line-height: 1.8;
+        }
     </style>
 </head>
 <body>
@@ -408,10 +418,12 @@
             <div class="card" id="resultadoTranscripcionCard" style="display: none;">
                 <div class="card-title" style="color: var(--ai-color);"><i class="fa-solid fa-file-lines"></i> Notas Generadas</div>
                 
-                <!-- Div virtual oculto donde guardamos temporalmente el HTML sucio para procesarlo a PDF limpio -->
-                <div id="contenedorPDF" style="display: none;"></div>
+                <!-- Oculto: aquí inyectamos el HTML para el PDF -->
+                <div style="display: none;">
+                    <div id="contenedorPDF"></div>
+                </div>
 
-                <!-- Vista de la App (Oscura) -->
+                <!-- Visible: Interfaz modo oscuro -->
                 <div id="textoResumenIA" style="font-size: 0.95rem; color: var(--text-main); line-height: 1.6; white-space: pre-wrap; max-height: 400px; overflow-y: auto; padding-right: 10px;"></div>
                 
                 <button id="btnDescargarPDF" onclick="generarYDescargarPDF()" class="btn-primary btn-pdf" style="margin-top: 20px; display: none;">
@@ -727,6 +739,9 @@
             btn.disabled = true;
             window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
 
+            // TÍTULOS CONDICIONALES ACTUALIZADOS
+            let tituloMostrar = tipoAnalisis === "transcripcion" ? "Transcripción de la Clase de" : "Resumen Inteligente de";
+
             let promptInteligente = "";
             if (tipoAnalisis === "transcripcion") {
                 promptInteligente = `Transcribe de forma exacta y literal todo lo que se dice en este audio de la materia '${materia}'. Escribe palabra por palabra. No agregues introducciones, no hagas resúmenes, no crees listas de tareas ni agregues comentarios tuyos. Solamente devuelve el texto completo de lo que se escucha.`;
@@ -802,11 +817,15 @@
                 }
 
                 if (exitoChat) {
-                    let tituloMostrar = tipoAnalisis === "transcripcion" ? "Transcripción Literal de" : "Resumen Inteligente de";
                     textoResultado.innerHTML = `<b>${tituloMostrar} ${materia}</b><br><br>${respuestaFinal}`;
                     
-                    // Guardamos el contenido sucio en el contenedor oculto para luego procesarlo aislado
-                    contenedorPDF.innerHTML = `<h2 style="color: #0f172a; border-bottom: 2px solid #3b82f6; padding-bottom: 10px; margin-bottom: 20px; font-size: 18pt;">${tituloMostrar} ${materia}</h2><div style="white-space: pre-wrap; text-align: justify; margin-bottom: 20px;">${respuestaFinal}</div><hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 30px 0 15px 0;"><small style="color:#64748b;">Generado con Panel Universitario Pro IA</small>`;
+                    // DISEÑO DEL CONTENEDOR PDF CORREGIDO
+                    contenedorPDF.innerHTML = `
+                        <h2 style="color: #0f172a; border-bottom: 2px solid #3b82f6; padding-bottom: 10px; margin-bottom: 20px; font-size: 18pt;">${tituloMostrar} ${materia}</h2>
+                        <div style="white-space: pre-wrap; text-align: justify; margin-bottom: 20px;">${respuestaFinal}</div>
+                        <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 30px 0 15px 0;">
+                        <small style="color:#64748b;">Generado con Panel Universitario Pro IA</small>
+                    `;
                     
                     btnPDF.style.display = 'block';
                     archivoInput.value = '';
@@ -827,27 +846,24 @@
         // 🔥 FUNCIÓN PARA CREAR Y DESCARGAR EL PDF SIN ESPACIOS BLANCOS
         // ==========================================================
         function generarYDescargarPDF() {
-            const contenidoHTML = document.getElementById('contenedorPDF').innerHTML;
+            const elementoParaPDF = document.getElementById('contenedorPDF');
             
-            // Creamos un contenedor temporal 100% aislado del resto de la página. 
-            // ¡Esto ELIMINA el enorme espacio en blanco en la parte de arriba!
-            const elementoTemporal = document.createElement('div');
-            elementoTemporal.innerHTML = contenidoHTML;
-            elementoTemporal.style.fontFamily = 'Arial, Helvetica, sans-serif';
-            elementoTemporal.style.fontSize = '12pt';
-            elementoTemporal.style.lineHeight = '1.6';
-            elementoTemporal.style.color = '#000000';
-            elementoTemporal.style.padding = '5px';
+            // Volvemos a hacerlo visible solo para capturarlo
+            elementoParaPDF.style.display = 'block';
 
             const opcionesPDF = {
-                margin:       15, // 15 milímetros de margen exacto en los 4 lados de la hoja
+                margin:       15,
                 filename:     `Apuntes_${materiaActualGenerada}_${new Date().toISOString().split('T')[0]}.pdf`,
                 image:        { type: 'jpeg', quality: 0.98 },
-                html2canvas:  { scale: 2, useCORS: true },
+                // LA MAGIA: scrollY: 0 fuerza a la cámara a no copiar el espacio vacío de arriba
+                html2canvas:  { scale: 2, useCORS: true, scrollY: 0 }, 
                 jsPDF:        { unit: 'mm', format: 'letter', orientation: 'portrait' }
             };
 
-            html2pdf().set(opcionesPDF).from(elementoTemporal).save();
+            html2pdf().set(opcionesPDF).from(elementoParaPDF).save().then(() => {
+                // Volvemos a esconderlo cuando termine
+                elementoParaPDF.style.display = 'none';
+            });
         }
 
         if ('serviceWorker' in navigator) {
