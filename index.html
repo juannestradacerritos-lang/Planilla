@@ -369,10 +369,10 @@
                     </label>
                 </div>
                 
-                <!-- LLAVE PRE-CARGADA DE GROQ -->
+                <!-- ESTE CAMPO AHORA ESTÁ LIMPIO PARA QUE LO LLENES TÚ EN LA APP -->
                 <div class="form-group" style="margin-bottom: 16px;">
                     <label>Tu Llave de IA (Groq API Key)</label>
-                    <input type="password" id="inputApiKey" class="form-control" value="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" placeholder="Pega aquí tu clave gsk_..." oninput="guardarLlaveLocal(this.value)">
+                    <input type="password" id="inputApiKey" class="form-control" value="" placeholder="Pega aquí tu clave gsk_..." oninput="guardarLlaveLocal(this.value)">
                 </div>
 
                 <button id="btnProcesarIA" onclick="procesarAudioConIA()" class="btn-primary btn-ai">
@@ -418,8 +418,6 @@
             const savedKey = localStorage.getItem('groq_saved_key');
             if (savedKey) {
                 document.getElementById('inputApiKey').value = savedKey;
-            } else {
-                guardarLlaveLocal(document.getElementById('inputApiKey').value);
             }
         });
 
@@ -745,7 +743,7 @@ Transcripción de la clase:
 
                         respuestaFinal = chatData.choices[0].message.content;
                         exitoChat = true;
-                        break; // Si el modelo responde correctamente, salimos del bucle
+                        break; 
 
                     } catch (error) {
                         console.warn(`Modelo ${modeloActual} no disponible:`, error.message);
