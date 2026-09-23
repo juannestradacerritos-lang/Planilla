@@ -243,7 +243,7 @@
                         <i class="fa-solid fa-clipboard-list" style="width: 20px; text-align: center;"></i> Mis Tareas
                     </div>
                     <div class="dropdown-item" id="menu-audio" onclick="cambiarVista('audio')">
-                        <i class="fa-solid fa-microphone-lines" style="width: 20px; text-align: center;"></i> Clases en Audio (IA)
+                        <i class="fa-solid fa-microphone-lines" style="width: 20px; text-align: center;"></i> Transcribir clases (IA)
                     </div>
                     <hr style="border: 0; height: 1px; background: var(--border-light); margin: 4px 0;">
                     <div class="dropdown-item danger" onclick="logout()">
@@ -375,7 +375,7 @@
             </div>
 
             <div class="card" id="resultadoTranscripcionCard" style="display: none;">
-                <div class="card-title" style="color: var(--ai-color);"><i class="fa-solid fa-file-lines"></i> Notas Inteligentes</div>
+                <div class="card-title" style="color: var(--ai-color);"><i class="fa-solid fa-file-lines"></i> Notas</div>
                 <div id="textoResumenIA" style="font-size: 0.95rem; color: var(--text-main); line-height: 1.6; white-space: pre-line;"></div>
             </div>
         </div>
@@ -579,17 +579,53 @@
 
         function deleteClass(firebaseId) { if(confirm("¿Eliminar clase?")) db.collection("clases").doc(firebaseId).delete(); }
 
+        // --- RENDERIZADO DE TAREAS ACTUALIZADO CON TIEMPO RESTANTE ---
         function renderTasks() {
             const list = document.getElementById('tasksList'); list.innerHTML = '';
             if(tasks.length === 0) { list.innerHTML = `<div class="empty-state"><i class="fa-solid fa-mug-hot" style="font-size: 2rem;"></i><p>No tienes tareas pendientes.</p></div>`; return; }
+            
             tasks.sort((a, b) => new Date(a.date + 'T' + a.time) - new Date(b.date + 'T' + b.time));
+            
             tasks.forEach((tsk) => {
-                const dueDate = new Date(tsk.date + 'T' + tsk.time); const now = new Date(); const isUrgent = (dueDate - now) > 0 && (dueDate - now) < (24 * 60 * 60 * 1000); const urgentClass = isUrgent ? 'urgent' : '';
+                const dueDate = new Date(tsk.date + 'T' + tsk.time); 
+                const now = new Date(); 
+                const diffMs = dueDate - now;
+                const isUrgent = diffMs > 0 && diffMs < (24 * 60 * 60 * 1000); 
+                const urgentClass = isUrgent ? 'urgent' : '';
                 const dateStr = new Date(tsk.date + 'T12:00:00').toLocaleDateString('es-ES', { month: 'short', day: 'numeric' });
+                
+                // LÓGICA DE TIEMPO RESTANTE
+                const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+                const diffHours = Math.floor((diffMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                
+                let tiempoRestanteHTML = "";
+                if (diffMs < 0) {
+                    tiempoRestanteHTML = `<span class="task-tag" style="background: rgba(239, 68, 68, 0.15); color: #fca5a5; border-color: rgba(239, 68, 68, 0.3);"><i class="fa-solid fa-circle-exclamation"></i> Vencida</span>`;
+                } else if (diffDays > 0) {
+                    tiempoRestanteHTML = `<span class="task-tag" style="background: rgba(16, 185, 129, 0.15); color: #6ee7b7; border-color: rgba(16, 185, 129, 0.3);"><i class="fa-regular fa-clock"></i> Faltan ${diffDays} día${diffDays > 1 ? 's' : ''}</span>`;
+                } else if (diffHours > 0) {
+                    tiempoRestanteHTML = `<span class="task-tag" style="background: rgba(245, 158, 11, 0.15); color: #fcd34d; border-color: rgba(245, 158, 11, 0.3);"><i class="fa-solid fa-stopwatch"></i> Faltan ${diffHours} hora${diffHours > 1 ? 's' : ''}</span>`;
+                } else {
+                    tiempoRestanteHTML = `<span class="task-tag" style="background: rgba(239, 68, 68, 0.15); color: #fca5a5; border-color: rgba(239, 68, 68, 0.3);"><i class="fa-solid fa-fire"></i> ¡Vence pronto!</span>`;
+                }
+
                 list.innerHTML += `
                     <div class="list-item task-item ${urgentClass}" id="task-${tsk.id}">
-                        <div class="item-info"><h3>${tsk.name}</h3><div><span class="task-tag"><i class="fa-solid fa-bookmark"></i> ${tsk.subject}</span></div><p style="margin-top: 4px; color: ${isUrgent ? '#ef4444' : '#94a3b8'};"><i class="fa-regular fa-calendar-xmark"></i> Límite: ${dateStr} - ${tsk.time}</p></div>
-                        <div class="actions" style="flex-direction: column;"><button class="btn-icon success" onclick="completeTask('${tsk.id}')"><i class="fa-solid fa-check"></i></button><button class="btn-icon edit" onclick="editTask('${tsk.id}')"><i class="fa-solid fa-pen"></i></button><button class="btn-icon delete" onclick="deleteTask('${tsk.id}')"><i class="fa-solid fa-trash-can"></i></button></div>
+                        <div class="item-info">
+                            <h3>${tsk.name}</h3>
+                            <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 4px;">
+                                <span class="task-tag"><i class="fa-solid fa-bookmark"></i> ${tsk.subject}</span>
+                                ${tiempoRestanteHTML}
+                            </div>
+                            <p style="margin-top: 6px; color: ${isUrgent ? '#ef4444' : '#94a3b8'};">
+                                <i class="fa-regular fa-calendar-xmark"></i> Límite: ${dateStr} - ${tsk.time}
+                            </p>
+                        </div>
+                        <div class="actions" style="flex-direction: column;">
+                            <button class="btn-icon success" onclick="completeTask('${tsk.id}')"><i class="fa-solid fa-check"></i></button>
+                            <button class="btn-icon edit" onclick="editTask('${tsk.id}')"><i class="fa-solid fa-pen"></i></button>
+                            <button class="btn-icon delete" onclick="deleteTask('${tsk.id}')"><i class="fa-solid fa-trash-can"></i></button>
+                        </div>
                     </div>`;
             });
         }
@@ -613,7 +649,7 @@
 
 
         // ==========================================================
-        // 🔥 LÓGICA DE INTELIGENCIA ARTIFICIAL GEMINI (GEMINI 3.7 FLASH)
+        // 🔥 LÓGICA DE INTELIGENCIA ARTIFICIAL CON REINTENTOS AUTOMÁTICOS
         // ==========================================================
         async function procesarAudioConIA() {
             const materia = document.getElementById('audioSubject').value;
@@ -631,70 +667,86 @@
             const btn = document.getElementById('btnProcesarIA');
             
             tarjetaResultado.style.display = 'block';
-            textoResultado.innerHTML = `⏳ <b>Paso 1/2:</b> Subiendo clase a los servidores de IA temporales (Sin consumir tu espacio Firebase)...`;
             btn.disabled = true;
             window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
 
-            try {
-                // 1. Subir el archivo temporalmente a la API de Google
-                const uploadUrl = `https://generativelanguage.googleapis.com/upload/v1beta/files?key=${GEMINI_API_KEY}`;
-                const uploadRes = await fetch(uploadUrl, {
-                    method: 'POST',
-                    headers: {
-                        'X-Goog-Upload-Command': 'start, upload, finalize',
-                        'X-Goog-Upload-Header-Content-Length': archivo.size.toString(),
-                        'X-Goog-Upload-Header-Content-Type': archivo.type,
-                        'Content-Type': archivo.type
-                    },
-                    body: archivo
-                });
-                
-                const uploadData = await uploadRes.json();
-                if(!uploadData.file || !uploadData.file.uri) {
-                    throw new Error("La IA no pudo recibir el archivo. Revisa que tu API Key comience con 'AIzaSy...'.");
+            let intentos = 0;
+            const maxIntentos = 3;
+            let exito = false;
+
+            while (intentos < maxIntentos && !exito) {
+                try {
+                    intentos++;
+                    textoResultado.innerHTML = `⏳ <b>Intento ${intentos} de ${maxIntentos}:</b> Subiendo archivo y conectando con Gemini...`;
+
+                    // 1. Subir el archivo temporalmente a la API de Google
+                    const uploadUrl = `https://generativelanguage.googleapis.com/upload/v1beta/files?key=${GEMINI_API_KEY}`;
+                    const uploadRes = await fetch(uploadUrl, {
+                        method: 'POST',
+                        headers: {
+                            'X-Goog-Upload-Command': 'start, upload, finalize',
+                            'X-Goog-Upload-Header-Content-Length': archivo.size.toString(),
+                            'X-Goog-Upload-Header-Content-Type': archivo.type,
+                            'Content-Type': archivo.type
+                        },
+                        body: archivo
+                    });
+                    
+                    const uploadData = await uploadRes.json();
+                    if(!uploadData.file || !uploadData.file.uri) {
+                        throw new Error("La IA no pudo recibir el archivo. Revisa que tu API Key sea correcta.");
+                    }
+                    
+                    const fileUri = uploadData.file.uri;
+
+                    textoResultado.innerHTML = `⏳ <b>Procesando:</b> Archivo subido con éxito. Generando resumen y buscando tareas...`;
+
+                    // 2. Pedir a Gemini que analice la clase (Usando gemini-3.7-flash)
+                    const generateUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.7-flash:generateContent?key=${GEMINI_API_KEY}`;
+                    const prompt = `Actúa como el mejor estudiante universitario. Estás escuchando una clase de la materia '${materia}'. Haz un resumen súper detallado con los puntos clave y temas importantes. Al final del resumen, crea una sección que diga 'TAREAS PENDIENTES:' y enlista de forma clara todas las tareas, ensayos o investigaciones que el profesor asignó. Si no dejó tarea, escribe 'No se asignaron tareas en esta sesión'.`;
+
+                    const generateRes = await fetch(generateUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            contents: [{
+                                role: 'user',
+                                parts: [
+                                    { fileData: { fileUri: fileUri, mimeType: archivo.type } },
+                                    { text: prompt }
+                                ]
+                            }]
+                        })
+                    });
+
+                    const generateData = await generateRes.json();
+                    
+                    if (generateData.error) {
+                        throw new Error(generateData.error.message);
+                    }
+                    
+                    const respuestaIA = generateData.candidates[0].content.parts[0].text;
+
+                    // 3. Mostrar el resultado en pantalla si todo sale bien
+                    textoResultado.innerHTML = `<b>Resumen Inteligente de ${materia}</b><br><br>${respuestaIA.replace(/\n/g, '<br>')}`;
+                    
+                    archivoInput.value = '';
+                    document.getElementById('audioFileName').textContent = 'Buscar archivo de clase...';
+                    exito = true;
+
+                } catch (error) {
+                    console.warn(`Intento ${intentos} falló:`, error.message);
+                    if (intentos >= maxIntentos) {
+                        textoResultado.innerHTML = `<span style="color:var(--danger)"><i class="fa-solid fa-triangle-exclamation"></i> Error tras ${maxIntentos} intentos: ${error.message}<br><br><b>Sugerencia:</b> El servidor gratuito está muy saturado. Intenta con un archivo más corto o espera unos minutos.</span>`;
+                    } else {
+                        textoResultado.innerHTML = `⚠️ Servidor saturado (Alta demanda). Reintentando automáticamente en 5 segundos... (Intento ${intentos}/${maxIntentos})`;
+                        await new Promise(resolve => setTimeout(resolve, 5000)); // Espera 5 segundos antes del siguiente intento
+                    }
                 }
-                
-                const fileUri = uploadData.file.uri;
-
-                textoResultado.innerHTML = `⏳ <b>Paso 2/2:</b> ¡Archivo subido con éxito! Gemini está escuchando tu clase y escribiendo el resumen... (Esto puede tardar un par de minutos)`;
-
-                // 2. Pedir a Gemini que analice la clase (Usando gemini-3.7-flash)
-                const generateUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.7-flash:generateContent?key=${GEMINI_API_KEY}`;
-                const prompt = `Actúa como el mejor estudiante universitario. Estás escuchando una clase de la materia '${materia}'. Haz un resumen súper detallado con los puntos clave y temas importantes. Al final del resumen, crea una sección que diga 'TAREAS PENDIENTES:' y enlista de forma clara todas las tareas, ensayos o investigaciones que el profesor asignó. Si no dejó tarea, escribe 'No se asignaron tareas en esta sesión'.`;
-
-                const generateRes = await fetch(generateUrl, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        contents: [{
-                            role: 'user',
-                            parts: [
-                                { fileData: { fileUri: fileUri, mimeType: archivo.type } },
-                                { text: prompt }
-                            ]
-                        }]
-                    })
-                });
-
-                const generateData = await generateRes.json();
-                
-                if (generateData.error) throw new Error(generateData.error.message);
-                
-                const respuestaIA = generateData.candidates[0].content.parts[0].text;
-
-                // 3. Mostrar el resultado en pantalla
-                textoResultado.innerHTML = `<b>Resumen Inteligente de ${materia}</b><br><br>${respuestaIA.replace(/\n/g, '<br>')}`;
-                
-                archivoInput.value = '';
-                document.getElementById('audioFileName').textContent = 'Buscar archivo de clase...';
-
-            } catch (error) {
-                console.error("Error en Gemini:", error);
-                textoResultado.innerHTML = `<span style="color:var(--danger)"><i class="fa-solid fa-triangle-exclamation"></i> Error al procesar: ${error.message}</span>`;
-            } finally {
-                btn.disabled = false;
-                btn.innerHTML = `<i class="fa-solid fa-wand-magic-sparkles"></i> Analizar otra clase con Gemini`;
             }
+
+            btn.disabled = false;
+            btn.innerHTML = `<i class="fa-solid fa-wand-magic-sparkles"></i> Analizar Clase con Gemini`;
         }
 
         // --- REGISTRO DEL SERVICE WORKER ---
