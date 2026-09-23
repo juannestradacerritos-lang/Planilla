@@ -286,9 +286,13 @@
         let unsubscribeTasks = null;
 
        // --- SISTEMA DE AUTENTICACIÓN ---
-        auth.onAuthStateChanged((user) => {
+       auth.onAuthStateChanged((user) => {
+            // Ocultar la pantalla de carga apenas Firebase responde
+            const loadingView = document.getElementById('loading-view');
+            if(loadingView) loadingView.style.display = 'none';
+
             if (user) {
-                // Usuario conectado: Muestra el panel directamente sin parpadeos
+                // Usuario conectado
                 currentUser = user;
                 document.getElementById('login-view').style.display = 'none';
                 document.getElementById('dashboard-view').style.display = 'flex';
@@ -298,7 +302,7 @@
                 
                 loadUserData();
             } else {
-                // Nadie conectado: Muestra la pantalla de login limpiamente
+                // Nadie conectado
                 currentUser = null;
                 document.getElementById('login-view').style.display = 'flex';
                 document.getElementById('dashboard-view').style.display = 'none';
