@@ -209,6 +209,7 @@
     </style>
 </head>
 <body>
+    <!-- PANTALLA DE INICIO DE SESIÓN -->
     <div id="login-view">
         <i class="fa-solid fa-graduation-cap" style="font-size: 4.5rem; color: #3b82f6; filter: drop-shadow(0 0 20px rgba(59,130,246,0.4));"></i>
         <h1>Panel Universitario</h1>
@@ -218,6 +219,7 @@
         </button>
     </div>
     
+    <!-- PANEL PRINCIPAL -->
     <div class="dashboard-wrapper" id="dashboard-view">
         
         <div class="header">
@@ -251,6 +253,7 @@
             </div>
         </div>
 
+        <!-- =================== SECCIÓN DE CLASES =================== -->
         <div id="vista-clases">
             <div class="card">
                 <div class="card-title" style="color: #38bdf8;"><i class="fa-solid fa-bolt"></i> Programar Materia</div>
@@ -306,6 +309,7 @@
             </div>
         </div>
 
+        <!-- =================== SECCIÓN DE TAREAS =================== -->
         <div id="vista-tareas" style="display: none;">
             <div class="card">
                 <div class="card-title" style="color: #a78bfa;"><i class="fa-solid fa-list-check"></i> Nueva Tarea</div>
@@ -340,6 +344,7 @@
             </div>
         </div>
 
+        <!-- =================== SECCIÓN DE AUDIO / TRANSCRIPCIÓN (IA) =================== -->
         <div id="vista-audio" style="display: none;">
             <div class="card">
                 <div class="card-title" style="color: var(--ai-color);"><i class="fa-solid fa-microphone-lines"></i> Resumen de Clase por IA</div>
@@ -358,9 +363,10 @@
                     </label>
                 </div>
                 
+                <!-- CAMPO INTELIGENTE QUE RECUERDA TU LLAVE AUTOMÁTICAMENTE -->
                 <div class="form-group" style="margin-bottom: 16px;">
-                    <label>Tu Llave de IA (API Key)</label>
-                    <input type="password" id="inputApiKey" class="form-control" placeholder="Pega aquí tu clave AIzaSy...">
+                    <label>Tu Llave de IA (Solo se pide la primera vez)</label>
+                    <input type="password" id="inputApiKey" class="form-control" placeholder="Pega aquí tu clave AIzaSy..." oninput="guardarLlaveLocal(this.value)">
                 </div>
 
                 <button id="btnProcesarIA" onclick="procesarAudioConIA()" class="btn-primary btn-ai">
@@ -376,6 +382,7 @@
 
     </div>
 
+    <!-- SDK DE FIREBASE -->
     <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore-compat.js"></script>
@@ -400,6 +407,18 @@
         let unsubscribeTasks = null;
         let editingClassId = null;
         let editingTaskId = null;
+
+        // Cargar automáticamente la llave guardada en el dispositivo al iniciar
+        window.addEventListener('DOMContentLoaded', () => {
+            const savedKey = localStorage.getItem('gemini_saved_key');
+            if (savedKey) {
+                document.getElementById('inputApiKey').value = savedKey;
+            }
+        });
+
+        function guardarLlaveLocal(valor) {
+            localStorage.setItem('gemini_saved_key', valor.trim());
+        }
 
         // Lógica del Menú
         function toggleMenu() { document.getElementById('dropdownMenu').classList.toggle('active'); }
@@ -594,19 +613,18 @@
 
 
         // ==========================================================
-        // 🔥 LÓGICA DE INTELIGENCIA ARTIFICIAL GEMINI
+        // 🔥 LÓGICA DE INTELIGENCIA ARTIFICIAL GEMINI (CORREGIDA)
         // ==========================================================
         async function procesarAudioConIA() {
             const materia = document.getElementById('audioSubject').value;
             const archivoInput = document.getElementById('classAudioFile');
             const archivo = archivoInput.files[0];
             
-            // Leemos la llave directamente de lo que el usuario pega en la app
             const GEMINI_API_KEY = document.getElementById('inputApiKey').value.trim();
 
             if(!materia) return alert('Por favor selecciona una materia primero.');
             if(!archivo) return alert('Por favor selecciona un archivo de audio o video para que la IA lo escuche.');
-            if(!GEMINI_API_KEY) return alert('Por favor pega tu API Key de Gemini en el recuadro.');
+            if(!GEMINI_API_KEY) return alert('Por favor pega tu API Key de Gemini en el recuadro (solo se hace la primera vez).');
 
             const tarjetaResultado = document.getElementById('resultadoTranscripcionCard');
             const textoResultado = document.getElementById('textoResumenIA');
@@ -633,15 +651,15 @@
                 
                 const uploadData = await uploadRes.json();
                 if(!uploadData.file || !uploadData.file.uri) {
-                    throw new Error("La IA no pudo recibir el archivo (Posible API Key incorrecta). Asegúrate que empiece con 'AIzaSy...'");
+                    throw new Error("La IA no pudo recibir el archivo. Revisa que tu API Key sea correcta.");
                 }
                 
                 const fileUri = uploadData.file.uri;
 
                 textoResultado.innerHTML = `⏳ <b>Paso 2/2:</b> ¡Archivo subido con éxito! Gemini está escuchando tu clase y escribiendo el resumen... (Esto puede tardar un par de minutos)`;
 
-                // 2. Pedir a Gemini que analice la clase
-                const generateUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`;
+                // 2. Pedir a Gemini que analice la clase (AHORA CON MODELO CORREGIDO)
+                const generateUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${GEMINI_API_KEY}`;
                 const prompt = `Actúa como el mejor estudiante universitario. Estás escuchando una clase de la materia '${materia}'. Haz un resumen súper detallado con los puntos clave y temas importantes. Al final del resumen, crea una sección que diga 'TAREAS PENDIENTES:' y enlista de forma clara todas las tareas, ensayos o investigaciones que el profesor asignó. Si no dejó tarea, escribe 'No se asignaron tareas en esta sesión'.`;
 
                 const generateRes = await fetch(generateUrl, {
@@ -664,10 +682,9 @@
                 
                 const respuestaIA = generateData.candidates[0].content.parts[0].text;
 
-                // 3. Mostrar el resultado bonito en pantalla
+                // 3. Mostrar el resultado en pantalla
                 textoResultado.innerHTML = `<b>Resumen Inteligente de ${materia}</b><br><br>${respuestaIA.replace(/\n/g, '<br>')}`;
                 
-                // Limpiar el selector de archivo
                 archivoInput.value = '';
                 document.getElementById('audioFileName').textContent = 'Buscar archivo de clase...';
 
