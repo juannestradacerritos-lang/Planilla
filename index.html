@@ -419,7 +419,6 @@
             if (savedKey) {
                 document.getElementById('inputApiKey').value = savedKey;
             } else {
-                // Guarda la que dejamos por defecto para futuros accesos
                 guardarLlaveLocal(document.getElementById('inputApiKey').value);
             }
         });
@@ -653,7 +652,7 @@
 
 
         // ==========================================================
-        // 🔥 LÓGICA ULTRA RÁPIDA CON GROQ IA (WHISPER + LLAMA 3)
+        // 🔥 LÓGICA DE IA (GROQ) CON SISTEMA DE RESPALDO (FALLBACK)
         // ==========================================================
         async function procesarAudioConIA() {
             const materia = document.getElementById('audioSubject').value;
@@ -666,7 +665,6 @@
             if(!archivo) return alert('Por favor selecciona un archivo de audio o video para la IA.');
             if(!GROQ_API_KEY) return alert('La API Key de Groq no se encuentra.');
 
-            // Groq tiene un límite estricto de 25MB para archivos de audio
             if (archivo.size > 25 * 1024 * 1024) {
                 return alert('El archivo pesa más de 25 MB. Por favor, recórtalo o comprímelo antes de subirlo.');
             }
@@ -687,7 +685,7 @@
                 formData.append("file", archivo);
                 formData.append("model", "whisper-large-v3-turbo");
                 formData.append("response_format", "json");
-                formData.append("language", "es"); // Ayuda a mejorar la precisión en español
+                formData.append("language", "es"); 
 
                 const transcripcionRes = await fetch("https://api.groq.com/openai/v1/audio/transcriptions", {
                     method: 'POST',
@@ -698,48 +696,72 @@
                 const transcripcionData = await transcripcionRes.json();
                 
                 if (!transcripcionRes.ok || transcripcionData.error) {
-                    throw new Error(transcripcionData.error?.message || "Error al intentar transcribir el archivo de audio.");
+                    throw new Error(transcripcionData.error?.message || "Error al transcribir el audio.");
                 }
 
                 const textoTranscrito = transcripcionData.text;
 
                 if (!textoTranscrito || textoTranscrito.trim() === "") {
-                    throw new Error("La Inteligencia Artificial no logró detectar ninguna voz humana en este archivo.");
+                    throw new Error("No se logró detectar ninguna voz humana en este archivo.");
                 }
 
-                // PASO 2: Mandar el texto transcrito a Llama 3 para hacer el súper resumen
-                textoResultado.innerHTML = `⏳ <b>Paso 2/2:</b> ¡Audio capturado! Ahora Llama 3 está armando el resumen y sacando las tareas...`;
+                // PASO 2: Resumir el texto usando una lista de respaldo (Fallback Array de Groq)
+                // Se intentará primero con el más libre, y si falla, saltará a los demás.
+                const modelosDeRespaldo = [
+                    "llama-3.1-8b-instant",
+                    "llama3-8b-8192",
+                    "llama3-70b-8192",
+                    "mixtral-8x7b-32768"
+                ];
 
+                let exitoChat = false;
+                let respuestaFinal = "";
+                
                 const promptInteligente = `Actúa como el mejor estudiante universitario. Lee esta transcripción de una clase de '${materia}'. Haz un resumen súper detallado con los puntos clave y temas importantes. Al final del resumen, crea una sección que diga 'TAREAS PENDIENTES:' y enlista de forma clara todas las tareas, ensayos o investigaciones que el profesor asignó. Si no dejó tarea, escribe 'No se asignaron tareas en esta sesión'.
 
 Transcripción de la clase:
 "${textoTranscrito}"`;
 
-                const chatRes = await fetch("https://api.groq.com/openai/v1/chat/completions", {
-                    method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${GROQ_API_KEY}`,
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        model: "llama-3.3-70b-versatile",
-                        messages: [{ role: "user", content: promptInteligente }]
-                    })
-                });
+                for (let i = 0; i < modelosDeRespaldo.length; i++) {
+                    let modeloActual = modelosDeRespaldo[i];
+                    textoResultado.innerHTML = `⏳ <b>Paso 2/2:</b> Generando resumen (Probando modelo ${modeloActual})...`;
 
-                const chatData = await chatRes.json();
+                    try {
+                        const chatRes = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+                            method: 'POST',
+                            headers: {
+                                'Authorization': `Bearer ${GROQ_API_KEY}`,
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                model: modeloActual,
+                                messages: [{ role: "user", content: promptInteligente }]
+                            })
+                        });
 
-                if (!chatRes.ok || chatData.error) {
-                    throw new Error(chatData.error?.message || "Error al procesar el resumen de texto.");
+                        const chatData = await chatRes.json();
+
+                        if (chatData.error) {
+                            throw new Error(chatData.error.message);
+                        }
+
+                        respuestaFinal = chatData.choices[0].message.content;
+                        exitoChat = true;
+                        break; // Si el modelo responde correctamente, salimos del bucle
+
+                    } catch (error) {
+                        console.warn(`Modelo ${modeloActual} no disponible:`, error.message);
+                        if (i === modelosDeRespaldo.length - 1) {
+                            throw new Error("Todos los modelos de texto están saturados o restringidos en tu cuenta. " + error.message);
+                        }
+                    }
                 }
 
-                const respuestaFinal = chatData.choices[0].message.content;
-
-                // Mostrar el resultado final en pantalla
-                textoResultado.innerHTML = `<b>Resumen Inteligente de ${materia}</b><br><br>${respuestaFinal.replace(/\n/g, '<br>')}`;
-                
-                archivoInput.value = '';
-                document.getElementById('audioFileName').textContent = 'Buscar archivo de clase...';
+                if (exitoChat) {
+                    textoResultado.innerHTML = `<b>Resumen Inteligente de ${materia}</b><br><br>${respuestaFinal.replace(/\n/g, '<br>')}`;
+                    archivoInput.value = '';
+                    document.getElementById('audioFileName').textContent = 'Buscar archivo de clase...';
+                }
 
             } catch (error) {
                 console.error("Error en Groq API:", error);
@@ -750,7 +772,6 @@ Transcripción de la clase:
             }
         }
 
-        // --- REGISTRO DEL SERVICE WORKER ---
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => { navigator.serviceWorker.register('./sw.js').catch(err => console.log('Fallo PWA:', err)); });
         }
