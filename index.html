@@ -289,10 +289,14 @@
         let unsubscribeClasses = null;
         let unsubscribeTasks = null;
 
-        // Capturar resultado del redirect al volver de Google
-        auth.getRedirectResult().catch((error) => {
-            console.error("Error en redirect:", error);
-        });
+        // FÓRMULA CLAVE: Forzar persistencia LOCAL para que la PWA no olvide el inicio de sesión tras el redireccionamiento
+        auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL)
+            .then(() => {
+                return auth.getRedirectResult();
+            })
+            .catch((error) => {
+                console.error("Error en persistencia o redirect:", error);
+            });
 
         // --- SISTEMA DE AUTENTICACIÓN ---
         auth.onAuthStateChanged((user) => {
