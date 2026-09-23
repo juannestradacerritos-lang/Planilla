@@ -47,7 +47,7 @@
 
         #login-view {
             display: none; flex-direction: column; align-items: center; justify-content: center;
-            width: 100%; max-width: 400px; text-align: center; gap: 24px;
+            width: 100%; max-width: 400px; text-align: center; gap: 20px;
             margin-top: 25vh; 
         }
         #login-view h1 { font-size: 2.2rem; background: var(--gradient-text); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-weight: 700; letter-spacing: -0.5px;}
@@ -59,6 +59,10 @@
             box-shadow: 0 10px 25px rgba(255, 255, 255, 0.1);
         }
         .btn-google:hover { transform: translateY(-3px); box-shadow: 0 15px 35px rgba(255, 255, 255, 0.2); }
+        
+        .btn-prueba {
+            background: linear-gradient(135deg, var(--secondary), #6d28d9); color: #fff;
+        }
 
         .dashboard-wrapper {
             width: 100%; max-width: 600px; display: none; flex-direction: column; gap: 20px;
@@ -141,7 +145,6 @@
             padding-right: 40px; text-overflow: ellipsis; overflow: hidden; white-space: nowrap;
         }
 
-        /* DISEÑO DE BOTÓN DE SUBIDA DE ARCHIVO OPTIMIZADO PARA MÓVIL */
         .custom-file-upload {
             display: flex; align-items: center; gap: 10px; padding: 13px 16px;
             background: rgba(0, 0, 0, 0.2); border: 1px dashed rgba(148, 163, 184, 0.3);
@@ -152,10 +155,7 @@
         .custom-file-upload input[type="file"] { display: none; }
         .custom-file-upload i { color: var(--primary); font-size: 1.1rem; flex-shrink: 0; }
         .custom-file-upload span {
-            flex: 1; /* Toma todo el espacio disponible */
-            white-space: nowrap; /* Evita que el texto baje de línea */
-            overflow: hidden; /* Oculta lo que sobra */
-            text-overflow: ellipsis; /* Pone los "..." al final */
+            flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; 
         }
 
         .btn-primary {
@@ -230,8 +230,7 @@
             <img src="https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg" width="22" alt="Google">
             Iniciar sesión con Google
         </button>
-    </div>
-    
+      
     <!-- PANEL PRINCIPAL -->
     <div class="dashboard-wrapper" id="dashboard-view">
         
@@ -260,7 +259,7 @@
                     </div>
                     <hr style="border: 0; height: 1px; background: var(--border-light); margin: 4px 0;">
                     <div class="dropdown-item danger" onclick="logout()">
-                        <i class="fa-solid fa-arrow-right-from-bracket" style="width: 20px; text-align: center;"></i> Cerrar sesión
+                        <i class="fa-solid fa-arrow-right-from-bracket" style="width: 20px; text-align: center;"></i> Salir
                     </div>
                 </div>
             </div>
@@ -321,7 +320,7 @@
                 <div id="classesList"></div>
             </div>
         </div>
-
+      
         <!-- =================== SECCIÓN DE TAREAS =================== -->
         <div id="vista-tareas" style="display: none;">
             <div class="card">
@@ -357,7 +356,7 @@
             </div>
         </div>
 
-        <!-- =================== SECCIÓN DE AUDIO / TRANSCRIPCIÓN (GROQ IA) =================== -->
+        <!-- =================== SECCIÓN DE AUDIO / TRANSCRIPCIÓN (GEMINI IA) =================== -->
         <div id="vista-audio" style="display: none;">
             <div class="card">
                 <div class="card-title" style="color: var(--ai-color);"><i class="fa-solid fa-microphone-lines"></i> Resumen de Clase por IA</div>
@@ -367,9 +366,8 @@
                     <select id="audioSubject" class="form-control"></select>
                 </div>
 
-                <!-- DISEÑO DE ARCHIVO CORREGIDO -->
                 <div class="form-group" style="margin-bottom: 16px;">
-                    <label>Archivo de audio o video (Máx 25 MB)</label>
+                    <label>Archivo de audio o video</label>
                     <label class="custom-file-upload">
                         <i class="fa-solid fa-cloud-arrow-up"></i>
                         <span id="audioFileName">Buscar archivo de clase...</span>
@@ -378,12 +376,12 @@
                 </div>
                 
                 <div class="form-group" style="margin-bottom: 16px;">
-                    <label>Tu Llave de IA (Groq API Key)</label>
-                    <input type="password" id="inputApiKey" class="form-control" value="" placeholder="Pega aquí tu clave gsk_..." oninput="guardarLlaveLocal(this.value)">
+                    <label>Tu Llave de IA (Gemini API Key)</label>
+                    <input type="password" id="inputApiKey" class="form-control" value="" placeholder="Pega aquí tu clave AIzaSy..." oninput="guardarLlaveLocal(this.value)">
                 </div>
 
                 <button id="btnProcesarIA" onclick="procesarAudioConIA()" class="btn-primary btn-ai">
-                    <i class="fa-solid fa-wand-magic-sparkles"></i> Analizar Clase con Groq IA
+                    <i class="fa-solid fa-wand-magic-sparkles"></i> Analizar Clase con Gemini IA
                 </button>
             </div>
 
@@ -420,16 +418,17 @@
         let unsubscribeTasks = null;
         let editingClassId = null;
         let editingTaskId = null;
+        let modoPrueba = false; // Variable para saber si estamos en modo prueba
 
         window.addEventListener('DOMContentLoaded', () => {
-            const savedKey = localStorage.getItem('groq_saved_key');
+            const savedKey = localStorage.getItem('gemini_saved_key');
             if (savedKey) {
                 document.getElementById('inputApiKey').value = savedKey;
             }
         });
 
         function guardarLlaveLocal(valor) {
-            localStorage.setItem('groq_saved_key', valor.trim());
+            localStorage.setItem('gemini_saved_key', valor.trim());
         }
 
         function toggleMenu() { document.getElementById('dropdownMenu').classList.toggle('active'); }
@@ -450,15 +449,36 @@
             document.getElementById('vistaActualTexto').textContent = titulos[vista];
         }
 
+        // --- SISTEMA PARA MODO DE PRUEBA (BYPASS FIREBASE) ---
+        function entrarModoPrueba() {
+            modoPrueba = true;
+            currentUser = {
+                uid: 'usuario_prueba_123',
+                displayName: 'Estudiante de Prueba',
+                photoURL: 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png'
+            };
+            document.getElementById('login-view').style.display = 'none';
+            document.getElementById('dashboard-view').style.display = 'flex';
+            document.getElementById('userName').textContent = currentUser.displayName;
+            document.getElementById('profileAvatar').innerHTML = `<img src="${currentUser.photoURL}" alt="Perfil">`;
+            
+            // En modo prueba usamos datos locales falsos para no causar error en Firebase
+            classes = [{id: "1", name: "Economía", day: "1", time: "10:00", endTime: "12:00", link: "#"}];
+            tasks = [{id: "1", name: "Ensayo 1", subject: "Economía", date: "2026-12-31", time: "23:59"}];
+            renderClasses();
+            renderTasks();
+            alert("Has entrado en Modo Prueba local. Los datos guardados aquí se borrarán al recargar la página.");
+        }
+
         auth.onAuthStateChanged((user) => {
-            if (user) {
+            if (user && !modoPrueba) {
                 currentUser = user;
                 document.getElementById('login-view').style.display = 'none';
                 document.getElementById('dashboard-view').style.display = 'flex';
                 document.getElementById('userName').textContent = user.displayName;
                 document.getElementById('profileAvatar').innerHTML = `<img src="${user.photoURL}" alt="Perfil">`;
                 loadUserData();
-            } else {
+            } else if (!modoPrueba) {
                 currentUser = null;
                 document.getElementById('dashboard-view').style.display = 'none';
                 document.getElementById('login-view').style.display = 'flex';
@@ -468,7 +488,14 @@
         });
         
         function loginWithGoogle() { auth.signInWithPopup(provider).catch(error => console.error(error)); }
-        function logout() { auth.signOut(); }
+        
+        function logout() { 
+            if(modoPrueba) {
+                window.location.reload();
+            } else {
+                auth.signOut(); 
+            }
+        }
 
         document.getElementById('classImage').addEventListener('change', function(e) {
             document.getElementById('fileNameDisplay').textContent = e.target.files[0] ? e.target.files[0].name : "Adjuntar imagen...";
@@ -479,10 +506,9 @@
         }
 
         const daysMapStr = { "1": "Lunes", "2": "Martes", "3": "Miércoles", "4": "Jueves", "5": "Viernes", "6": "Sábado", "7": "Domingo" };
-        let classes = [];
-        let tasks = [];
 
         function loadUserData() {
+            if (modoPrueba) return;
             unsubscribeClasses = db.collection("clases").where("userId", "==", currentUser.uid).onSnapshot((snapshot) => {
                 classes = []; snapshot.forEach((doc) => { classes.push({ id: doc.id, ...doc.data() }); }); renderClasses();
             });
@@ -546,9 +572,14 @@
                 let updateData = { name, link, day, time, endTime };
                 if(fileInput.files.length > 0) {
                     const reader = new FileReader();
-                    reader.onload = function(e) { updateData.img = e.target.result; db.collection("clases").doc(editingClassId).update(updateData).then(resetClassForm); };
+                    reader.onload = function(e) { 
+                        updateData.img = e.target.result; 
+                        if(modoPrueba) { resetClassForm(); return; }
+                        db.collection("clases").doc(editingClassId).update(updateData).then(resetClassForm); 
+                    };
                     reader.readAsDataURL(fileInput.files[0]);
                 } else {
+                    if(modoPrueba) { resetClassForm(); return; }
                     db.collection("clases").doc(editingClassId).update(updateData).then(resetClassForm);
                 }
             } else {
@@ -563,7 +594,13 @@
         }
 
         function saveAndCreateAlarm(name, link, day, time, endTime, imgBase64) {
-            db.collection("clases").add({ userId: currentUser.uid, name, link, day, time, endTime, img: imgBase64 });
+            if(!modoPrueba) {
+                db.collection("clases").add({ userId: currentUser.uid, name, link, day, time, endTime, img: imgBase64 });
+            } else {
+                classes.push({ id: Date.now().toString(), name, link, day, time, endTime, img: imgBase64 });
+                renderClasses();
+            }
+            
             const parsedDay = parseInt(day);
             const gcalDays = {1: "MO", 2: "TU", 3: "WE", 4: "TH", 5: "FR", 6: "SA", 7: "SU"};
             let date = new Date(); let distance = parsedDay - date.getDay(); if (distance < 0) distance += 7; date.setDate(date.getDate() + distance);
@@ -586,7 +623,16 @@
             document.getElementById('fileNameDisplay').textContent = 'Adjuntar imagen...'; document.getElementById('btnSaveClass').innerHTML = '<i class="fa-regular fa-calendar-plus"></i> Guardar y Crear Alarma';
         }
 
-        function deleteClass(firebaseId) { if(confirm("¿Eliminar clase?")) db.collection("clases").doc(firebaseId).delete(); }
+        function deleteClass(firebaseId) { 
+            if(confirm("¿Eliminar clase?")) {
+                if(modoPrueba) {
+                    classes = classes.filter(c => c.id !== firebaseId);
+                    renderClasses();
+                } else {
+                    db.collection("clases").doc(firebaseId).delete(); 
+                }
+            }
+        }
 
         function renderTasks() {
             const list = document.getElementById('tasksList'); list.innerHTML = '';
@@ -640,8 +686,16 @@
         function processTask() {
             const name = document.getElementById('taskName').value.trim(); const subject = document.getElementById('taskSubject').value; const date = document.getElementById('taskDate').value; const time = document.getElementById('taskTime').value;
             if(!name || !subject || !date || !time) return alert('Faltan datos obligatorios para la tarea.');
-            if (editingTaskId) { db.collection("tareas").doc(editingTaskId).update({ name, subject, date, time }).then(resetTaskForm); } 
-            else { db.collection("tareas").add({ userId: currentUser.uid, name, subject, date, time }).then(resetTaskForm); }
+            if (editingTaskId) { 
+                if(!modoPrueba) db.collection("tareas").doc(editingTaskId).update({ name, subject, date, time }).then(resetTaskForm); 
+            } else { 
+                if(!modoPrueba) {
+                    db.collection("tareas").add({ userId: currentUser.uid, name, subject, date, time }).then(resetTaskForm);
+                } else {
+                    tasks.push({ id: Date.now().toString(), name, subject, date, time });
+                    renderTasks(); resetTaskForm();
+                }
+            }
         }
 
         function editTask(id) {
@@ -651,27 +705,44 @@
         }
 
         function resetTaskForm() { editingTaskId = null; document.getElementById('taskName').value = ''; document.getElementById('taskSubject').value = ''; document.getElementById('taskDate').value = ''; document.getElementById('btnSaveTask').innerHTML = '<i class="fa-solid fa-plus"></i> Guardar Actividad'; }
-        function completeTask(firebaseId) { const el = document.getElementById(`task-${firebaseId}`); if (el) el.classList.add('completing'); setTimeout(() => { db.collection("tareas").doc(firebaseId).delete(); }, 300); }
-        function deleteTask(firebaseId) { if(confirm("¿Eliminar esta tarea?")) db.collection("tareas").doc(firebaseId).delete(); }
+        
+        function completeTask(firebaseId) { 
+            const el = document.getElementById(`task-${firebaseId}`); 
+            if (el) el.classList.add('completing'); 
+            setTimeout(() => { 
+                if(!modoPrueba) {
+                    db.collection("tareas").doc(firebaseId).delete();
+                } else {
+                    tasks = tasks.filter(t => t.id !== firebaseId);
+                    renderTasks();
+                }
+            }, 300); 
+        }
 
+        function deleteTask(firebaseId) { 
+            if(confirm("¿Eliminar esta tarea?")) {
+                if(!modoPrueba) {
+                    db.collection("tareas").doc(firebaseId).delete(); 
+                } else {
+                    tasks = tasks.filter(t => t.id !== firebaseId);
+                    renderTasks();
+                }
+            }
+        }
 
         // ==========================================================
-        // 🔥 LÓGICA DE IA (GROQ) CON MODELOS SEGUROS
+        // 🔥 LÓGICA DE IA (GEMINI ACTUALIZADO) CON FALLBACK ARRAY
         // ==========================================================
         async function procesarAudioConIA() {
             const materia = document.getElementById('audioSubject').value;
             const archivoInput = document.getElementById('classAudioFile');
             const archivo = archivoInput.files[0];
             
-            const GROQ_API_KEY = document.getElementById('inputApiKey').value.trim();
+            const GEMINI_API_KEY = document.getElementById('inputApiKey').value.trim();
 
             if(!materia) return alert('Por favor selecciona una materia primero.');
             if(!archivo) return alert('Por favor selecciona un archivo de audio o video para la IA.');
-            if(!GROQ_API_KEY) return alert('La API Key de Groq no se encuentra.');
-
-            if (archivo.size > 25 * 1024 * 1024) {
-                return alert('El archivo pesa más de 25 MB. Por favor, recórtalo o comprímelo antes de subirlo.');
-            }
+            if(!GEMINI_API_KEY) return alert('La API Key de Gemini no se encuentra.');
 
             const tarjetaResultado = document.getElementById('resultadoTranscripcionCard');
             const textoResultado = document.getElementById('textoResumenIA');
@@ -682,58 +753,55 @@
             window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
 
             try {
-                textoResultado.innerHTML = `⏳ <b>Paso 1/2:</b> Transcribiendo audio de la clase velozmente...`;
+                textoResultado.innerHTML = `⏳ <b>Paso 1/2:</b> Subiendo archivo a los servidores de Gemini...`;
                 
-                const formData = new FormData();
-                formData.append("file", archivo);
-                formData.append("model", "whisper-large-v3-turbo");
-                formData.append("response_format", "json");
-                formData.append("language", "es"); 
-
-                const transcripcionRes = await fetch("https://api.groq.com/openai/v1/audio/transcriptions", {
+                // 1. Subir archivo a Gemini
+                const uploadUrl = `https://generativelanguage.googleapis.com/upload/v1beta/files?key=${GEMINI_API_KEY}`;
+                const uploadRes = await fetch(uploadUrl, {
                     method: 'POST',
-                    headers: { 'Authorization': `Bearer ${GROQ_API_KEY}` },
-                    body: formData
+                    headers: {
+                        'X-Goog-Upload-Command': 'start, upload, finalize',
+                        'X-Goog-Upload-Header-Content-Length': archivo.size.toString(),
+                        'X-Goog-Upload-Header-Content-Type': archivo.type,
+                        'Content-Type': archivo.type
+                    },
+                    body: archivo
                 });
-
-                const transcripcionData = await transcripcionRes.json();
                 
-                if (!transcripcionRes.ok || transcripcionData.error) {
-                    throw new Error(transcripcionData.error?.message || "Error al transcribir el audio.");
+                const uploadData = await uploadRes.json();
+                if(!uploadData.file || !uploadData.file.uri) {
+                    throw new Error("Gemini no pudo recibir el archivo. Revisa tu API Key.");
                 }
+                const fileUri = uploadData.file.uri;
 
-                const textoTranscrito = transcripcionData.text;
-
-                if (!textoTranscrito || textoTranscrito.trim() === "") {
-                    throw new Error("No se logró detectar ninguna voz humana en este archivo.");
-                }
-
-                // Lista de modelos garantizados para la capa gratuita actual de Groq
+                // 2. Arreglo de Modelos de Respaldo EXCLUSIVOS DE GEMINI (Basado en la foto)
                 const modelosDeRespaldo = [
-                    "llama-3.3-70b-versatile",
-                    "llama-3.1-8b-instant",
-                    "gemma2-9b-it"
+                    "gemini-3.8-flash",
+                    "gemini-3.5-flash-lite"
                 ];
 
                 let exitoChat = false;
                 let respuestaFinal = "";
                 
-                const promptInteligente = `Actúa como el mejor estudiante universitario. Lee esta transcripción de una clase (o material) de '${materia}'. Haz un resumen súper detallado con los puntos clave y temas importantes. Al final del resumen, crea una sección que diga 'TAREAS PENDIENTES:' y enlista de forma clara todas las tareas, ensayos o investigaciones que se detecten. Si no dejó tarea, escribe 'No se detectaron tareas'.\n\nTranscripción:\n"${textoTranscrito}"`;
+                const promptInteligente = `Actúa como el mejor estudiante universitario. Lee esta clase de la materia '${materia}'. Haz un resumen súper detallado con los puntos clave. Al final del resumen, crea una sección que diga 'TAREAS PENDIENTES:' y enlista de forma clara todas las tareas, ensayos o investigaciones que el profesor asignó. Si no dejó tarea, escribe 'No se asignaron tareas en esta sesión'.`;
 
                 for (let i = 0; i < modelosDeRespaldo.length; i++) {
                     let modeloActual = modelosDeRespaldo[i];
-                    textoResultado.innerHTML = `⏳ <b>Paso 2/2:</b> Generando resumen (Probando modelo ${modeloActual})...`;
+                    textoResultado.innerHTML = `⏳ <b>Paso 2/2:</b> Analizando con el modelo <b>${modeloActual}</b>...`;
 
                     try {
-                        const chatRes = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+                        const generateUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modeloActual}:generateContent?key=${GEMINI_API_KEY}`;
+                        const chatRes = await fetch(generateUrl, {
                             method: 'POST',
-                            headers: {
-                                'Authorization': `Bearer ${GROQ_API_KEY}`,
-                                'Content-Type': 'application/json'
-                            },
+                            headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify({
-                                model: modeloActual,
-                                messages: [{ role: "user", content: promptInteligente }]
+                                contents: [{
+                                    role: 'user',
+                                    parts: [
+                                        { fileData: { fileUri: fileUri, mimeType: archivo.type } },
+                                        { text: promptInteligente }
+                                    ]
+                                }]
                             })
                         });
 
@@ -743,14 +811,14 @@
                             throw new Error(chatData.error.message);
                         }
 
-                        respuestaFinal = chatData.choices[0].message.content;
+                        respuestaFinal = chatData.candidates[0].content.parts[0].text;
                         exitoChat = true;
                         break; 
 
                     } catch (error) {
-                        console.warn(`Modelo ${modeloActual} no disponible:`, error.message);
+                        console.warn(`Gemini ${modeloActual} no disponible o saturado:`, error.message);
                         if (i === modelosDeRespaldo.length - 1) {
-                            throw new Error("Todos los modelos gratuitos fallaron. El último error fue: " + error.message);
+                            throw new Error("Todos los modelos gratuitos están saturados ahora mismo. Por favor, intenta de nuevo en unos minutos. " + error.message);
                         }
                     }
                 }
@@ -762,11 +830,11 @@
                 }
 
             } catch (error) {
-                console.error("Error en Groq API:", error);
+                console.error("Error en Gemini API:", error);
                 textoResultado.innerHTML = `<span style="color:var(--danger)"><i class="fa-solid fa-triangle-exclamation"></i> Error: ${error.message}</span>`;
             } finally {
                 btn.disabled = false;
-                btn.innerHTML = `<i class="fa-solid fa-wand-magic-sparkles"></i> Analizar otra clase con Groq IA`;
+                btn.innerHTML = `<i class="fa-solid fa-wand-magic-sparkles"></i> Analizar otra clase con Gemini IA`;
             }
         }
 
