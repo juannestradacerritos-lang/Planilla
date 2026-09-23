@@ -132,16 +132,26 @@
         .form-group label { font-size: 0.75rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
         
         .form-control {
-            width: 100%; background: rgba(0, 0, 0, 0.2); border: 1px solid var(--border-light);
+            width: 100%; background: rgba(0, 0, 0, 0.3); border: 1px solid var(--border-light);
             padding: 14px 16px; border-radius: 12px; color: #fff; font-size: 0.95rem; 
             transition: all 0.3s ease;
         }
-        .form-control:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.15); background: rgba(0, 0, 0, 0.4); }
+        .form-control:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.15); background: rgba(0, 0, 0, 0.5); }
+        
+        /* DISEÑO MEJORADO PARA SELECTORES */
         select.form-control { 
             cursor: pointer; appearance: none; 
             background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%2394a3b8%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E"); 
             background-repeat: no-repeat; background-position: right 14px top 50%; background-size: 12px auto; 
             padding-right: 40px; text-overflow: ellipsis; overflow: hidden; white-space: nowrap;
+        }
+        
+        /* ESTILO PARA LAS OPCIONES DEL SELECTOR */
+        select.form-control option {
+            background-color: #1e293b;
+            color: #f8fafc;
+            padding: 12px;
+            font-size: 0.95rem;
         }
 
         .custom-file-upload {
@@ -222,18 +232,31 @@
         .empty-state i { font-size: 2.5rem; opacity: 0.3; }
         .empty-state p { font-size: 0.95rem; font-weight: 500; }
         
-        /* ESTILO PARA EL PDF: Letra oscura sobre fondo blanco para que se lea e imprima bien */
+        /* =========================================================
+           DISEÑO MEJORADO Y ORDENADO PARA LA EXPORTACIÓN DEL PDF
+           ========================================================= */
         #contenedorPDF {
             background: #ffffff;
-            color: #000000;
-            padding: 30px;
-            border-radius: 8px;
-            font-family: Arial, sans-serif;
-            font-size: 12pt;
-            line-height: 1.6;
+            color: #1e293b; /* Color pizarra oscuro para mejor lectura */
+            padding: 20px 30px;
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            font-size: 11pt;
+            line-height: 1.8; /* Mejor espacio entre líneas */
         }
-        #contenedorPDF h2 { color: #1e293b; border-bottom: 2px solid #3b82f6; padding-bottom: 10px; margin-bottom: 20px;}
-        #contenedorPDF strong { color: #1e293b; }
+        #contenedorPDF h2 { 
+            color: #0f172a; 
+            border-bottom: 2px solid #3b82f6; 
+            padding-bottom: 12px; 
+            margin-bottom: 25px;
+            font-size: 18pt;
+        }
+        #contenedorPDF .pdf-content {
+            white-space: pre-wrap; /* Mantiene los saltos de línea y párrafos */
+            text-align: justify; /* Texto alineado a ambos lados */
+            margin-bottom: 20px;
+        }
+        #contenedorPDF strong { color: #0f172a; }
+        #contenedorPDF hr { border: 0; border-top: 1px solid #e2e8f0; margin: 30px 0 15px 0; }
     </style>
 </head>
 <body>
@@ -391,12 +414,12 @@
                     </label>
                 </div>
 
-                <!-- NUEVA OPCIÓN: ELEGIR QUÉ HARÁ LA IA -->
+                <!-- SELECTOR MEJORADO: Texto actualizado y con diseño oscuro interior -->
                 <div class="form-group" style="margin-bottom: 16px;">
                     <label>¿Qué deseas hacer?</label>
                     <select id="tipoAnalisisIA" class="form-control" style="color: var(--ai-color); font-weight: 600;">
-                        <option value="transcripcion">1. Solo Transcribir Exactamente (Sin explicar)</option>
-                        <option value="resumen">2. Hacer un Resumen y sacar Tareas</option>
+                        <option value="transcripcion">1. Solo Transcribir Exactamente</option>
+                        <option value="resumen">2. Hacer un Resumen</option>
                     </select>
                 </div>
                 
@@ -410,19 +433,18 @@
                 </button>
             </div>
 
-            <!-- TARJETA DONDE SE MUESTRA EL TEXTO PARA PDF -->
+            <!-- TARJETA DONDE SE MUESTRA EL TEXTO -->
             <div class="card" id="resultadoTranscripcionCard" style="display: none;">
                 <div class="card-title" style="color: var(--ai-color);"><i class="fa-solid fa-file-lines"></i> Notas Generadas</div>
                 
-                <!-- Este contenedor oculto es el que se transformará en PDF bonito -->
+                <!-- Contenedor oculto formateado para el PDF -->
                 <div style="display: none;">
                     <div id="contenedorPDF"></div>
                 </div>
 
-                <!-- Esto es lo que se ve en la pantalla de la app (Modo oscuro) -->
-                <div id="textoResumenIA" style="font-size: 0.95rem; color: var(--text-main); line-height: 1.6; white-space: pre-line; max-height: 400px; overflow-y: auto; padding-right: 10px;"></div>
+                <!-- Vista de la App -->
+                <div id="textoResumenIA" style="font-size: 0.95rem; color: var(--text-main); line-height: 1.6; white-space: pre-wrap; max-height: 400px; overflow-y: auto; padding-right: 10px;"></div>
                 
-                <!-- NUEVO BOTÓN PARA DESCARGAR PDF -->
                 <button id="btnDescargarPDF" onclick="generarYDescargarPDF()" class="btn-primary btn-pdf" style="margin-top: 20px; display: none;">
                     <i class="fa-solid fa-file-pdf"></i> Guardar como PDF
                 </button>
@@ -708,13 +730,13 @@
         }
 
         // ==========================================================
-        // 🔥 LÓGICA DE IA CON SELECCIÓN MÚLTIPLE (TRANSCRIBIR/RESUMIR)
+        // 🔥 LÓGICA DE IA CON SELECCIÓN ACTUALIZADA
         // ==========================================================
-        let materiaActualGenerada = ""; // Variable global para usarla en el nombre del PDF
+        let materiaActualGenerada = ""; 
 
         async function procesarAudioConIA() {
             const materia = document.getElementById('audioSubject').value;
-            materiaActualGenerada = materia; // Guardamos para el PDF
+            materiaActualGenerada = materia; 
             const archivoInput = document.getElementById('classAudioFile');
             const archivo = archivoInput.files[0];
             const tipoAnalisis = document.getElementById('tipoAnalisisIA').value;
@@ -732,16 +754,16 @@
             const btnPDF = document.getElementById('btnDescargarPDF');
             
             tarjetaResultado.style.display = 'block';
-            btnPDF.style.display = 'none'; // Ocultar botón PDF mientras procesa
+            btnPDF.style.display = 'none'; 
             btn.disabled = true;
             window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
 
-            // CONDICIÓN: Definir el "Prompt" dependiendo de lo que elijas en la pantalla
+            // PROMPTS ACTUALIZADOS (El resumen ya no busca tareas)
             let promptInteligente = "";
             if (tipoAnalisis === "transcripcion") {
-                promptInteligente = `Transcribe de forma exacta y literal todo lo que se dice en este audio de la materia '${materia}'. Escribe palabra por palabra. No agregues introducciones, no hagas resúmenes, no crees listas de tareas ni agregues comentarios tuyos. Solamente devuelve el texto completo de lo que se escucha en la clase.`;
+                promptInteligente = `Transcribe de forma exacta y literal todo lo que se dice en este audio de la materia '${materia}'. Escribe palabra por palabra. No agregues introducciones, no hagas resúmenes, no crees listas de tareas ni agregues comentarios tuyos. Solamente devuelve el texto completo de lo que se escucha.`;
             } else {
-                promptInteligente = `Actúa como el mejor estudiante universitario. Lee esta clase de la materia '${materia}'. Haz un resumen súper detallado con los puntos clave. Al final del resumen, crea una sección que diga 'TAREAS PENDIENTES:' y enlista de forma clara todas las tareas, ensayos o investigaciones que el profesor asignó. Si no dejó tarea, escribe 'No se asignaron tareas en esta sesión'.`;
+                promptInteligente = `Actúa como el mejor estudiante universitario. Lee esta clase de la materia '${materia}'. Haz un resumen súper detallado con los puntos clave, estructurado en párrafos ordenados y usando viñetas para los temas principales. No incluyas tareas pendientes, enfócate únicamente en resumir el contenido a la perfección.`;
             }
 
             try {
@@ -812,14 +834,12 @@
                 }
 
                 if (exitoChat) {
-                    // Mostrar en pantalla (modo oscuro)
                     let tituloMostrar = tipoAnalisis === "transcripcion" ? "Transcripción Literal de" : "Resumen Inteligente de";
-                    textoResultado.innerHTML = `<b>${tituloMostrar} ${materia}</b><br><br>${respuestaFinal.replace(/\n/g, '<br>')}`;
+                    textoResultado.innerHTML = `<b>${tituloMostrar} ${materia}</b><br><br>${respuestaFinal}`;
                     
-                    // Llenar el contenedor oculto para el PDF (fondo blanco para que se imprima bien)
-                    contenedorPDF.innerHTML = `<h2>${tituloMostrar} ${materia}</h2><p>${respuestaFinal.replace(/\n/g, '<br>')}</p><br><br><small>Generado con Panel Universitario Pro IA</small>`;
+                    // DISEÑO DEL PDF MEJORADO: Envuelto en un div con clase pdf-content que aplica text-align: justify y pre-wrap automático
+                    contenedorPDF.innerHTML = `<h2>${tituloMostrar} ${materia}</h2><div class="pdf-content">${respuestaFinal}</div><hr><small style="color:#64748b;">Generado con Panel Universitario Pro IA</small>`;
                     
-                    // Mostrar el botón de PDF y limpiar el archivo
                     btnPDF.style.display = 'block';
                     archivoInput.value = '';
                     document.getElementById('audioFileName').textContent = 'Buscar archivo de clase...';
@@ -836,23 +856,21 @@
         }
 
         // ==========================================================
-        // 🔥 FUNCIÓN PARA CREAR Y DESCARGAR EL PDF MÁGICAMENTE
+        // 🔥 FUNCIÓN PARA CREAR Y DESCARGAR EL PDF CON MÁRGENES
         // ==========================================================
         function generarYDescargarPDF() {
             const elementoParaPDF = document.getElementById('contenedorPDF');
-            
-            // Hacemos que el elemento sea temporalmente visible para que la librería lo pueda "fotografiar"
             elementoParaPDF.parentElement.style.display = 'block';
             
+            // Opciones avanzadas: Márgenes en los 4 lados [Arriba, Izquierda, Abajo, Derecha]
             const opcionesPDF = {
-                margin:       15,
+                margin:       [15, 15, 15, 15], 
                 filename:     `Apuntes_${materiaActualGenerada}_${new Date().toISOString().split('T')[0]}.pdf`,
                 image:        { type: 'jpeg', quality: 0.98 },
-                html2canvas:  { scale: 2, useCORS: true },
-                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+                html2canvas:  { scale: 2, useCORS: true, logging: false },
+                jsPDF:        { unit: 'mm', format: 'letter', orientation: 'portrait' }
             };
 
-            // Crear el PDF y ocultar de nuevo el contenedor original al terminar
             html2pdf().set(opcionesPDF).from(elementoParaPDF).save().then(() => {
                 elementoParaPDF.parentElement.style.display = 'none';
             });
