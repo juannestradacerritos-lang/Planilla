@@ -613,7 +613,7 @@
 
 
         // ==========================================================
-        // 🔥 LÓGICA DE INTELIGENCIA ARTIFICIAL GEMINI (CORREGIDA)
+        // 🔥 LÓGICA DE INTELIGENCIA ARTIFICIAL GEMINI (GEMINI 3.7 FLASH)
         // ==========================================================
         async function procesarAudioConIA() {
             const materia = document.getElementById('audioSubject').value;
@@ -624,7 +624,7 @@
 
             if(!materia) return alert('Por favor selecciona una materia primero.');
             if(!archivo) return alert('Por favor selecciona un archivo de audio o video para que la IA lo escuche.');
-            if(!GEMINI_API_KEY) return alert('Por favor pega tu API Key de Gemini en el recuadro (solo se hace la primera vez).');
+            if(!GEMINI_API_KEY) return alert('Por favor pega tu API Key de Gemini en el recuadro.');
 
             const tarjetaResultado = document.getElementById('resultadoTranscripcionCard');
             const textoResultado = document.getElementById('textoResumenIA');
@@ -651,15 +651,15 @@
                 
                 const uploadData = await uploadRes.json();
                 if(!uploadData.file || !uploadData.file.uri) {
-                    throw new Error("La IA no pudo recibir el archivo. Revisa que tu API Key sea correcta.");
+                    throw new Error("La IA no pudo recibir el archivo. Revisa que tu API Key comience con 'AIzaSy...'.");
                 }
                 
                 const fileUri = uploadData.file.uri;
 
                 textoResultado.innerHTML = `⏳ <b>Paso 2/2:</b> ¡Archivo subido con éxito! Gemini está escuchando tu clase y escribiendo el resumen... (Esto puede tardar un par de minutos)`;
 
-                // 2. Pedir a Gemini que analice la clase (AHORA CON MODELO CORREGIDO)
-                const generateUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-latest:generateContent?key=${GEMINI_API_KEY}`;
+                // 2. Pedir a Gemini que analice la clase (Usando gemini-3.7-flash)
+                const generateUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.7-flash:generateContent?key=${GEMINI_API_KEY}`;
                 const prompt = `Actúa como el mejor estudiante universitario. Estás escuchando una clase de la materia '${materia}'. Haz un resumen súper detallado con los puntos clave y temas importantes. Al final del resumen, crea una sección que diga 'TAREAS PENDIENTES:' y enlista de forma clara todas las tareas, ensayos o investigaciones que el profesor asignó. Si no dejó tarea, escribe 'No se asignaron tareas en esta sesión'.`;
 
                 const generateRes = await fetch(generateUrl, {
