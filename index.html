@@ -25,6 +25,7 @@
             --secondary-hover: #7c3aed;
             --success: #10b981;
             --danger: #ef4444;
+            --warning: #f59e0b;
             --gradient-text: linear-gradient(135deg, #38bdf8, #818cf8);
         }
 
@@ -42,7 +43,6 @@
             overflow-x: hidden;
         }
 
-        /* Ambas vistas ocultas por defecto para evitar parpadeos */
         #login-view {
             display: none; flex-direction: column; align-items: center; justify-content: center;
             width: 100%; max-width: 400px; text-align: center; gap: 20px;
@@ -118,17 +118,24 @@
         .btn-secondary { background: linear-gradient(to right, var(--secondary), var(--secondary-hover)); }
         .btn-secondary:hover { box-shadow: 0 6px 20px rgba(139, 92, 246, 0.6); }
 
+        /* Mejoras en las tarjetas de lista */
         .list-item {
-            background: rgba(0, 0, 0, 0.4); border: 1px solid var(--border-color); padding: 12px 15px;
-            border-radius: 12px; margin-bottom: 12px; display: flex; justify-content: space-between;
+            background: rgba(0, 0, 0, 0.4); border: 1px solid var(--border-color); padding: 15px;
+            border-radius: 14px; margin-bottom: 12px; display: flex; justify-content: space-between;
             align-items: center; transition: all 0.3s ease; gap: 15px;
         }
-        .list-item:hover { transform: scale(1.01); border-color: rgba(255, 255, 255, 0.2); }
+        .list-item:hover { transform: scale(1.01); border-color: rgba(255, 255, 255, 0.2); background: rgba(0, 0, 0, 0.6); }
         
-        .task-item { border-left: 4px solid var(--primary); }
-        .task-item.urgent { border-left-color: var(--danger); }
+        /* Estilos profesionales para Tareas */
+        .task-item { border-left: 4px solid var(--secondary); align-items: flex-start; }
+        .task-item.urgent { border-left-color: var(--danger); background: linear-gradient(to right, rgba(239, 68, 68, 0.05), transparent); }
         .task-item.completing { transform: scale(0.9); opacity: 0; background: rgba(16, 185, 129, 0.2); border-color: var(--success); }
-        .task-tag { font-size: 0.7rem; background: rgba(255,255,255,0.1); padding: 3px 8px; border-radius: 6px; margin-left: 8px; font-weight: normal; color: #cbd5e1; display: inline-block; }
+        
+        .task-tag { 
+            font-size: 0.7rem; background: rgba(139, 92, 246, 0.2); padding: 4px 10px; 
+            border-radius: 20px; margin-top: 6px; font-weight: 600; color: #c4b5fd; 
+            display: inline-block; border: 1px solid rgba(139, 92, 246, 0.3);
+        }
 
         .item-img-box {
             width: 45px; height: 45px; border-radius: 10px; background: #1e293b;
@@ -136,26 +143,33 @@
             flex-shrink: 0; color: #475569; font-size: 1.2rem; border: 1px solid #334155;
         }
         .item-img-box img { width: 100%; height: 100%; object-fit: cover; }
-        .item-info { flex-grow: 1; min-width: 0; }
-        .item-info h3 { font-size: 1.05rem; font-weight: 600; margin-bottom: 4px; display: flex; align-items: center; flex-wrap: wrap; gap: 5px;}
-        .item-info p { font-size: 0.8rem; color: var(--text-muted); display: flex; align-items: center; gap: 5px;}
-        .actions { display: flex; gap: 8px; flex-shrink: 0; }
+        
+        .item-info { flex-grow: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+        .item-info h3 { font-size: 1.05rem; font-weight: 600; display: flex; align-items: center; flex-wrap: wrap; gap: 8px;}
+        .item-info p { font-size: 0.85rem; color: var(--text-muted); display: flex; align-items: center; gap: 5px;}
+        
+        .actions { display: flex; gap: 6px; flex-shrink: 0; align-items: center;}
         
         .btn-icon {
             background: rgba(255, 255, 255, 0.05); border: 1px solid var(--border-color); color: #fff;
-            width: 36px; height: 36px; border-radius: 8px; display: flex; align-items: center; justify-content: center;
-            cursor: pointer; transition: all 0.2s;
+            width: 34px; height: 34px; border-radius: 8px; display: flex; align-items: center; justify-content: center;
+            cursor: pointer; transition: all 0.2s; font-size: 0.9rem;
         }
         .btn-icon.play { color: var(--primary); }
         .btn-icon.play:hover { background: rgba(59, 130, 246, 0.2); border-color: var(--primary); }
+        
+        /* Nuevo botón Editar */
+        .btn-icon.edit { color: var(--warning); }
+        .btn-icon.edit:hover { background: rgba(245, 158, 11, 0.2); border-color: var(--warning); }
+        
         .btn-icon.success { color: var(--success); }
         .btn-icon.success:hover { background: rgba(16, 185, 129, 0.2); border-color: var(--success); }
+        
         .btn-icon.delete { color: var(--danger); }
         .btn-icon.delete:hover { background: rgba(239, 68, 68, 0.2); border-color: var(--danger); }
     </style>
 </head>
 <body>
-    <!-- PANTALLA DE INICIO DE SESIÓN -->
     <div id="login-view">
         <i class="fa-solid fa-graduation-cap" style="font-size: 4rem; color: #3b82f6;"></i>
         <h1>Panel de clases y tareas</h1>
@@ -165,9 +179,7 @@
         </button>
     </div>
     
-    <!-- PANEL PRINCIPAL -->
     <div class="dashboard-wrapper" id="dashboard-view">
-        <!-- Cabecera Personalizada -->
         <div class="header">
             <div class="profile-section">
                 <div class="avatar" id="profileAvatar"></div>
@@ -179,7 +191,6 @@
             <button class="btn-logout" onclick="logout()"><i class="fa-solid fa-arrow-right-from-bracket"></i> Salir</button>
         </div>
 
-        <!-- Formulario de Clases -->
         <div class="card">
             <div class="card-title" style="color: #38bdf8;"><i class="fa-solid fa-bolt"></i> Nueva Clase</div>
             <div class="form-row">
@@ -221,18 +232,16 @@
                     <input type="time" id="classEndTime" class="form-control" value="20:30">
                 </div>
             </div>
-            <button onclick="processNewClass()" class="btn-primary">
+            <button id="btnSaveClass" onclick="processClass()" class="btn-primary">
                 <i class="fa-regular fa-bell"></i> Programar Alarma y Guardar
             </button>
         </div>
 
-        <!-- Lista de Clases -->
         <div class="card">
             <div class="card-title" style="color: #f8fafc;"><i class="fa-solid fa-list-check" style="color: #38bdf8;"></i> Agenda de la Semana</div>
             <div id="classesList"><p style="text-align:center; color:#94a3b8; font-size: 0.9rem; margin-top: 10px;">Sincronizando con la nube...</p></div>
         </div>
 
-        <!-- Gestor de Tareas -->
         <div class="card">
             <div class="card-title" style="color: #a78bfa;"><i class="fa-solid fa-clipboard-list"></i> Gestor de Tareas</div>
             <div class="form-row">
@@ -257,14 +266,13 @@
                     <input type="time" id="taskTime" class="form-control" value="23:59">
                 </div>
             </div>
-            <button onclick="saveTask()" class="btn-primary btn-secondary">
+            <button id="btnSaveTask" onclick="processTask()" class="btn-primary btn-secondary">
                 <i class="fa-solid fa-plus"></i> Guardar Tarea
             </button>
             <div id="tasksList" style="margin-top: 25px;"></div>
         </div>
     </div>
 
-    <!-- SDK DE FIREBASE -->
     <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore-compat.js"></script>
@@ -288,6 +296,10 @@
         let currentUser = null;
         let unsubscribeClasses = null;
         let unsubscribeTasks = null;
+        
+        // Variables para controlar la Edición
+        let editingClassId = null;
+        let editingTaskId = null;
 
         // --- SISTEMA DE AUTENTICACIÓN ---
         auth.onAuthStateChanged((user) => {
@@ -310,13 +322,11 @@
             }
         });
         
-        // REGRESAMOS A POPUP: Evita el bloqueo "storage-partitioned" de Android
         function loginWithGoogle() { 
             auth.signInWithPopup(provider).catch(function(error) {
                 console.error("Error al iniciar sesión:", error);
             });
         }
-        
         function logout() { auth.signOut(); }
 
         // --- UX FORMULARIO ---
@@ -325,30 +335,20 @@
             document.getElementById('fileNameDisplay').textContent = fileName;
         });
 
-        const daysMapStr = { 
-            "1": "Lunes", 
-            "2": "Martes", 
-            "3": "Miércoles", 
-            "4": "Jueves", 
-            "5": "Viernes", 
-            "6": "Sábado", 
-            "7": "Domingo" 
-        };
+        const daysMapStr = { "1": "Lunes", "2": "Martes", "3": "Miércoles", "4": "Jueves", "5": "Viernes", "6": "Sábado", "7": "Domingo" };
         let classes = [];
         let tasks = [];
 
         // --- CARGAR DATOS PRIVADOS DEL USUARIO ---
         function loadUserData() {
-            unsubscribeClasses = db.collection("clases")
-                .where("userId", "==", currentUser.uid)
+            unsubscribeClasses = db.collection("clases").where("userId", "==", currentUser.uid)
                 .onSnapshot((snapshot) => {
                     classes = [];
                     snapshot.forEach((doc) => { classes.push({ id: doc.id, ...doc.data() }); });
                     renderClasses();
                 });
 
-            unsubscribeTasks = db.collection("tareas")
-                .where("userId", "==", currentUser.uid)
+            unsubscribeTasks = db.collection("tareas").where("userId", "==", currentUser.uid)
                 .onSnapshot((snapshot) => {
                     tasks = [];
                     snapshot.forEach((doc) => { tasks.push({ id: doc.id, ...doc.data() }); });
@@ -382,6 +382,9 @@
                             <a href="${cls.link}" target="_blank" class="btn-icon play" title="Ir a clase">
                                 <i class="fa-solid fa-play"></i>
                             </a>
+                            <button class="btn-icon edit" onclick="editClass('${cls.id}')" title="Editar Clase">
+                                <i class="fa-solid fa-pen"></i>
+                            </button>
                             <button class="btn-icon delete" onclick="deleteClass('${cls.id}')" title="Eliminar">
                                 <i class="fa-solid fa-trash"></i>
                             </button>
@@ -394,7 +397,6 @@
         function updateSubjectDropdown() {
             const select = document.getElementById('taskSubject');
             select.innerHTML = '';
-            
             if(classes.length === 0) {
                 select.innerHTML = '<option value="" disabled selected>Agrega una clase arriba primero</option>';
             } else {
@@ -403,7 +405,8 @@
             }
         }
 
-        function processNewClass() {
+        // NUEVO: Procesar Nueva Clase o Actualizar Existente
+        function processClass() {
             const name = document.getElementById('className').value.trim();
             const link = document.getElementById('classLink').value.trim();
             const day = document.getElementById('classDay').value;
@@ -413,12 +416,29 @@
             
             if(!name || !link || !time || !endTime) return alert('Faltan datos de la clase.');
 
-            if(fileInput.files.length > 0) {
-                const reader = new FileReader();
-                reader.onload = function(e) { saveAndCreateAlarm(name, link, day, time, endTime, e.target.result); };
-                reader.readAsDataURL(fileInput.files[0]);
+            if (editingClassId) {
+                // Modo Edición
+                let updateData = { name, link, day, time, endTime };
+                
+                if(fileInput.files.length > 0) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) { 
+                        updateData.img = e.target.result;
+                        db.collection("clases").doc(editingClassId).update(updateData).then(resetClassForm);
+                    };
+                    reader.readAsDataURL(fileInput.files[0]);
+                } else {
+                    db.collection("clases").doc(editingClassId).update(updateData).then(resetClassForm);
+                }
             } else {
-                saveAndCreateAlarm(name, link, day, time, endTime, null);
+                // Modo Nueva Clase
+                if(fileInput.files.length > 0) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) { saveAndCreateAlarm(name, link, day, time, endTime, e.target.result); };
+                    reader.readAsDataURL(fileInput.files[0]);
+                } else {
+                    saveAndCreateAlarm(name, link, day, time, endTime, null);
+                }
             }
         }
 
@@ -428,6 +448,7 @@
                 name, link, day, time, endTime, img: imgBase64 
             });
 
+            // Generar evento para Google Calendar (solo en clase nueva)
             const parsedDay = parseInt(day);
             const gcalDays = {1: "MO", 2: "TU", 3: "WE", 4: "TH", 5: "FR", 6: "SA", 7: "SU"};
             let date = new Date();
@@ -446,12 +467,32 @@
 
             const calendarUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(name)}&dates=${dateString}/${endString}&details=${encodeURIComponent("Enlace: " + link)}&recur=RRULE:FREQ=WEEKLY;BYDAY=${gcalDays[parsedDay]}`;
 
+            resetClassForm();
+            window.open(calendarUrl, '_blank');
+        }
+
+        // NUEVO: Preparar formulario para editar clase
+        function editClass(id) {
+            const cls = classes.find(c => c.id === id);
+            if(!cls) return;
+            document.getElementById('className').value = cls.name;
+            document.getElementById('classLink').value = cls.link;
+            document.getElementById('classDay').value = cls.day;
+            document.getElementById('classTime').value = cls.time;
+            document.getElementById('classEndTime').value = cls.endTime;
+            
+            editingClassId = id;
+            document.getElementById('btnSaveClass').innerHTML = '<i class="fa-solid fa-save"></i> Actualizar Clase';
+            document.getElementById('className').focus();
+        }
+
+        function resetClassForm() {
+            editingClassId = null;
             document.getElementById('className').value = '';
             document.getElementById('classLink').value = '';
             document.getElementById('classImage').value = ''; 
             document.getElementById('fileNameDisplay').textContent = 'Subir portada...';
-
-            window.open(calendarUrl, '_blank');
+            document.getElementById('btnSaveClass').innerHTML = '<i class="fa-regular fa-bell"></i> Programar Alarma y Guardar';
         }
 
         function deleteClass(firebaseId) {
@@ -466,7 +507,7 @@
             list.innerHTML = '';
             
             if(tasks.length === 0) {
-                list.innerHTML = '<p style="text-align:center; color:#94a3b8; font-size: 0.9rem;">No tienes tareas pendientes.</p>';
+                list.innerHTML = '<p style="text-align:center; color:#94a3b8; font-size: 0.9rem;">No tienes tareas pendientes. ¡Buen trabajo!</p>';
                 return;
             }
 
@@ -481,15 +522,22 @@
                 const dateObj = new Date(tsk.date + 'T12:00:00');
                 const dateStr = dateObj.toLocaleDateString('es-ES', { month: 'short', day: 'numeric' });
 
+                // Diseño profesional para tareas
                 list.innerHTML += `
                     <div class="list-item task-item ${urgentClass}" id="task-${tsk.id}">
                         <div class="item-info">
-                            <h3>${tsk.name} <span class="task-tag">${tsk.subject}</span></h3>
-                            <p><i class="fa-regular fa-calendar-xmark"></i> Vence: ${dateStr} a las ${tsk.time}</p>
+                            <h3>${tsk.name}</h3>
+                            <span class="task-tag"><i class="fa-solid fa-book-open" style="margin-right:3px;"></i> ${tsk.subject}</span>
+                            <p style="margin-top: 6px; color: ${isUrgent ? '#ef4444' : '#94a3b8'};">
+                                <i class="fa-regular fa-calendar-xmark"></i> Vence: ${dateStr} a las ${tsk.time}
+                            </p>
                         </div>
-                        <div class="actions">
+                        <div class="actions" style="flex-direction: column;">
                             <button class="btn-icon success" onclick="completeTask('${tsk.id}')" title="Marcar como entregada">
                                 <i class="fa-solid fa-check"></i>
+                            </button>
+                            <button class="btn-icon edit" onclick="editTask('${tsk.id}')" title="Editar Tarea">
+                                <i class="fa-solid fa-pen"></i>
                             </button>
                             <button class="btn-icon delete" onclick="deleteTask('${tsk.id}')" title="Eliminar sin completar">
                                 <i class="fa-solid fa-trash"></i>
@@ -500,7 +548,8 @@
             });
         }
 
-        function saveTask() {
+        // NUEVO: Procesar Nueva Tarea o Actualizar Existente
+        function processTask() {
             const name = document.getElementById('taskName').value.trim();
             const subject = document.getElementById('taskSubject').value;
             const date = document.getElementById('taskDate').value;
@@ -508,14 +557,37 @@
 
             if(!name || !subject || !date || !time) return alert('Por favor llena todos los campos de la tarea.');
 
-            db.collection("tareas").add({ 
-                userId: currentUser.uid, 
-                name, subject, date, time 
-            }).then(() => {
-                document.getElementById('taskName').value = '';
-                document.getElementById('taskSubject').value = '';
-                document.getElementById('taskDate').value = '';
-            });
+            if (editingTaskId) {
+                db.collection("tareas").doc(editingTaskId).update({ 
+                    name, subject, date, time 
+                }).then(resetTaskForm);
+            } else {
+                db.collection("tareas").add({ 
+                    userId: currentUser.uid, name, subject, date, time 
+                }).then(resetTaskForm);
+            }
+        }
+
+        // NUEVO: Preparar formulario para editar tarea
+        function editTask(id) {
+            const tsk = tasks.find(t => t.id === id);
+            if(!tsk) return;
+            document.getElementById('taskName').value = tsk.name;
+            document.getElementById('taskSubject').value = tsk.subject;
+            document.getElementById('taskDate').value = tsk.date;
+            document.getElementById('taskTime').value = tsk.time;
+            
+            editingTaskId = id;
+            document.getElementById('btnSaveTask').innerHTML = '<i class="fa-solid fa-save"></i> Actualizar Tarea';
+            document.getElementById('taskName').focus();
+        }
+
+        function resetTaskForm() {
+            editingTaskId = null;
+            document.getElementById('taskName').value = '';
+            document.getElementById('taskSubject').value = '';
+            document.getElementById('taskDate').value = '';
+            document.getElementById('btnSaveTask').innerHTML = '<i class="fa-solid fa-plus"></i> Guardar Tarea';
         }
 
         function completeTask(firebaseId) {
