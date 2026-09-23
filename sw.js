@@ -1,4 +1,4 @@
-const CACHE_NAME = 'panel-u-cache-v37';
+const CACHE_NAME = 'panel-u-cache-v38';
 const urlsToCache = [
     './',
     './index.html',
